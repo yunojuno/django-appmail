@@ -1,5 +1,4 @@
 Django-AppMail
---------------
 
 Django app for managing transactional email templates
 
@@ -16,13 +15,12 @@ The core requirement is to provide an easy way to add / edit email templates (HT
 .. code:: python
 
     from appmail import send
-  
+
     def send_order_confirmation(order_id):
-        """Send the order confirmation email to the recipient.""" 
+        """Send the order confirmation email to the recipient."""
         order = Orders.objects.get(id=order_id)
         payload = {
             "greeting": "Hi, %s" % order.recipient,
             "line_items": order.line_items
         }
         # send(recipient, template, template_context)
-        send(order.recipient, 'order_confirmation', payload)
