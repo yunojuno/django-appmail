@@ -2,6 +2,6 @@ language: python
 python:
   - "2.7"
 # command to install tox depdendency, which then knows how to install any other dependencies
-install: "pip install tox==1.8.0"
+install: "pip install tox"
 # command to run tests
 script: tox

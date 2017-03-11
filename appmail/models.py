@@ -17,13 +17,21 @@ from .settings import VALIDATE_ON_SAVE
 
 class EmailTemplateQuerySet(models.query.QuerySet):
 
-    def get_latest(self, template_name, language_code=settings.LANGUAGE_CODE):
+    def current(self, name, language=settings.LANGUAGE_CODE):
         """Returns the latest version of a template."""
         templates = self.filter(
-            name=template_name,
-            language=language_code
+            name=name,
+            language=language
         )
         return templates.order_by('version').last()
+
+    def version(self, name, version, language=settings.LANGUAGE_CODE):
+        """Returns a specific version of a template."""
+        return self.get(
+            name=name,
+            language=language,
+            version=version
+        )
 
 
 class EmailTemplate(models.Model):

@@ -7,25 +7,29 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
-from ..models import (
-    EmailTemplate,
-    EmailTemplateQuerySet,
-)
+from ..models import EmailTemplate
 
 
 class EmailTemplateQuerySetTests(TestCase):
 
     """appmail.models.EmailTemplateQuerySet model tests."""
 
-    def test_get_latest(self):
+    def test_current(self):
         # manually setting the version in the wrong order, so the first
         # template is actually the last, when ordered by version.
         template1 = EmailTemplate(name='test', language='en-us', version=1).save()
         template2 = EmailTemplate(name='test', language='en-us', version=0).save()
-        self.assertEqual(EmailTemplate.objects.get_latest('test'), template1)
-        self.assertEqual(EmailTemplate.objects.get_latest('test', language_code='klingon'), None)
+        self.assertEqual(EmailTemplate.objects.current('test'), template1)
+        self.assertEqual(EmailTemplate.objects.current('test', language='klingon'), None)
+
+    def test_version(self):
+        template1 = EmailTemplate(name='test', language='en-us', version=1).save()
+        template2 = EmailTemplate(name='test', language='en-us', version=0).save()
+        self.assertEqual(EmailTemplate.objects.version('test', 1), template1)
+        self.assertEqual(EmailTemplate.objects.version('test', 0), template2)
+
 
 class EmailTemplateTests(TestCase):
 

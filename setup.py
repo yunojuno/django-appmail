@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 
@@ -7,18 +8,18 @@ README = open(os.path.join(os.path.dirname(__file__), 'README.rst')).read()
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name="",
+    name="django-appmail",
     version="0.1",
-    packages=[],
-    install_requires=[],
+    packages=find_packages(),
+    install_requires=['Django>=1.10'],
     include_package_data=True,
-    description='',
+    description='Django app for managing localised email templates.',
     long_description=README,
-    url='',
-    author='Hugo Rodger-Brown',
-    author_email='hugo@yunojuno.com',
-    maintainer='',
-    maintainer_email='',
+    url='https://github.com/yunojuno/django-appmail',
+    author='YunoJuno',
+    author_email='code@yunojuno.com',
+    maintainer='YunoJuno',
+    maintainer_email='code@yunojuno.com',
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
