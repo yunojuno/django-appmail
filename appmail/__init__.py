@@ -1,2 +1,2 @@
 # -*- coding: utf-8 -*-
-# my_app package
+default_app_config = 'appmail.apps.AppmailConfig'
