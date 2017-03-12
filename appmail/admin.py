@@ -27,14 +27,27 @@ class EmailTemplateAdmin(ModelAdmin):
     )
 
     def render_subject(self, obj):
-        return "<code>{}</code>".format(obj.render_subject({}))
+        if obj.id is None:
+            url = ''
+        else:
+            url = reverse(
+                'appmail:render_template_subject',
+                kwargs={'template_id': obj.id}
+            )
+        return self._iframe(url)
     render_subject.short_description = 'Rendered subject'
     render_subject.allow_tags = True
 
     def _iframe(self, url):
-        return "<iframe src='{}'></iframe>".format(url)
+        return (
+            "<iframe class='code' src='{}'></iframe><br/>"
+            "<a href='{}' target='_blank'>View in new tab (test with variables).</a>"
+            .format(url, url)
+        )
 
     def _url(self, obj, format):
+        if obj.id is None:
+            return ''
         url = reverse(
             'appmail:render_template_body',
             kwargs={'template_id': obj.id}
