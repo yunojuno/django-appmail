@@ -2,10 +2,21 @@
 {% block extrastyle %}
 {{ block.super }}
 <style>
-.code{
+iframe.appmail{
     border: 1px dashed gray;
     width: 600px;
     display: inline-block;
 }
 </style>
 {% endblock %}
+{% block admin_change_form_document_ready %}
+{{ block.super }}
+<!-- From - http://stackoverflow.com/a/20722176/45698
+used to resize iframes to content height -->
+<script type="text/javascript">
+function resizeIframe(obj){
+ obj.style.height = 0;
+ obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';
+}
+</script>
+{% endblock admin_change_form_document_ready %}
