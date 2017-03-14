@@ -46,7 +46,7 @@ class EmailTemplateTests(TestCase):
     def test_subject_context(self):
         """Check the context properties are converting as expected."""
         content = '{{a}} {{b.c}}'
-        context = {'a': "{{ A }}", 'b': {'c': "{{ C }}"}}
+        context = {'a': "A", 'b': {'c': "C"}}
         template = EmailTemplate(
             subject=content,
             body_text=content,

@@ -16,9 +16,9 @@ class HelperTests(TestCase):
         self.assertEqual(
             helpers.get_context('{{a}} {{b.c}}'),
             {
-                'a': "{{ A }}",
+                'a': "A",
                 'b': {
-                    'c': "{{ C }}"
+                    'c': "C"
                 }
             }
         )
@@ -66,9 +66,9 @@ class HelperTests(TestCase):
                 }
             ),
             {
-                'a': "{{ A }}",
+                'a': "A",
                 'b': {
-                    'c': "{{ C }}"
+                    'c': "C"
                 }
             }
         )
