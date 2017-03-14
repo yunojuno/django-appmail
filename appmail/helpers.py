@@ -82,7 +82,7 @@ def fill_leaf_values(tree):
     assert isinstance(tree, dict), "arg must be a dictionary"
     for k in tree.keys():
         if tree[k] == {}:
-            tree[k] = '{{ %s }}' % k.upper()
+            tree[k] = k.upper()
         else:
             fill_leaf_values(tree[k])
     return tree

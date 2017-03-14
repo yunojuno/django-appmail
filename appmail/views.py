@@ -23,7 +23,6 @@ def render_template_subject(request, template_id):
     """
     template = get_object_or_404(EmailTemplate, id=template_id)
     context = template.subject_context
-    print context
     return HttpResponse(template.render_subject(context), content_type='text/plain')
 
 
@@ -47,5 +46,7 @@ def render_template_body(request, template_id):
         context = template.body_text_context
     elif content_type == EmailTemplate.CONTENT_TYPE_HTML:
         context = template.body_html_context
+    else:
+        return HttpResponse("Invalid format: %s" % format, status=400)
     html = template.render_body(context, content_type)
     return HttpResponse(html, content_type=content_type)

@@ -41,7 +41,7 @@ class EmailTemplateAdmin(ModelAdmin):
     def _iframe(self, url):
         return (
             "<iframe class='appmail' src='{}' onload='resizeIframe(this)'></iframe><br/>"
-            "<a href='{}' target='_blank'>View in new tab (test with variables).</a>"
+            "<a href='{}' target='_blank'>View in new tab.</a>"
             .format(url, url)
         )
 
