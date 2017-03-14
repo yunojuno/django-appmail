@@ -34,11 +34,10 @@ mechanism for storing and rendering email content.
     def send_order_confirmation(order_id):
         order = Orders.objects.get(id=order_id)
         template = EmailTemplate.objects.current('order_confirmation')
-        payload = { "order": order }
-        message = template.create_message(
-            context={'order': order},
-            to=[order.recipient.email]
-        )
+        context = { "order": order }
+        # create_message accepts EmailMultiAlternatives constructor kwargs
+        # and returns a standard Django email object which can be updated / sent.
+        message = template.create_message(context, to=[order.recipient.email])
         message.send()
 
 The core requirements are:
@@ -62,7 +61,7 @@ languages and versions - they are stored as independent objects.
 
 .. code:: python
 
-    # get the default order_summary email
+    # get the default order_summary email (language = settings.LANGUAGE_CODE)
     template = EmailTemplate.objects.current('order_summary')
     # get the french version
     template = EmailTemplate.objects.current('order_summary', language='fr')
