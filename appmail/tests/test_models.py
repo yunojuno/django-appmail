@@ -39,6 +39,22 @@ class EmailTemplateTests(TestCase):
         template = EmailTemplate()
         self.assertEqual(template.language, settings.LANGUAGE_CODE)
         self.assertEqual(template.version, 0)
+        self.assertEqual(template.subject_context, {})
+        self.assertEqual(template.body_text_context, {})
+        self.assertEqual(template.body_html_context, {})
+
+    def test_subject_context(self):
+        """Check the context properties are converting as expected."""
+        content = '{{a}} {{b.c}}'
+        context = {'a': "{{ A }}", 'b': {'c': "{{ C }}"}}
+        template = EmailTemplate(
+            subject=content,
+            body_text=content,
+            body_html=content
+        )
+        self.assertEqual(template.subject_context, context)
+        self.assertEqual(template.body_text_context, context)
+        self.assertEqual(template.body_html_context, context)
 
     @mock.patch.object(EmailTemplate, 'clean')
     def test_save(self, mock_clean):

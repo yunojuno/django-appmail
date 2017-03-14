@@ -12,6 +12,7 @@ from django.template import (
     TemplateSyntaxError
 )
 
+from . import helpers
 from .settings import VALIDATE_ON_SAVE
 
 
@@ -96,6 +97,21 @@ class EmailTemplate(models.Model):
 
     class Meta:
         unique_together = ("name", "language", "version")
+
+    @property
+    def subject_context(self):
+        """Sample template context for subject property."""
+        return helpers.get_context(self.subject)
+
+    @property
+    def body_text_context(self):
+        """Sample template context for body_text property."""
+        return helpers.get_context(self.body_text)
+
+    @property
+    def body_html_context(self):
+        """Sample template context for body_html property."""
+        return helpers.get_context(self.body_html)
 
     def save(self, *args, **kwargs):
         """Validate template rendering before saving object."""
