@@ -27,6 +27,8 @@ def render_template_body(request, template_id, content_type):
     elif content_type == EmailTemplate.CONTENT_TYPE_HTML:
         context = template.body_html_context
     else:
-        return HttpResponse("Invalid format: %s" % format, status=400)
+        # do not return the content_type to the user, as it is
+        # user-generated and _could_ be a vulnerability.
+        return HttpResponse("Invalid content_type specified.", status=400)
     html = template.render_body(context, content_type)
     return HttpResponse(html, content_type=content_type)
