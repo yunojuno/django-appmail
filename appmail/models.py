@@ -62,15 +62,21 @@ class EmailTemplate(models.Model):
         verbose_name='Template name',
         db_index=True
     )
+    description = models.CharField(
+        max_length=100,
+        help_text="Optional description. e.g. used to differentiate variants ('new header').",
+        blank=True
+    )
     # language is free text and not a choices field as we make no assumption
     # as to how the end user is storing / managing languages.
     language = models.CharField(
         max_length=20,
         default=settings.LANGUAGE_CODE,
         help_text=(
-            "Used to support localisation of emails, defaults to settings.LANGUAGE_CODE."
+            "Used to support localisation of emails, defaults to `settings.LANGUAGE_CODE`, "
+            "but can be any string, e.g. 'London', 'NYC'."
         ),
-        verbose_name='Language code',
+        verbose_name='Language',
         db_index=True
     )
     version = models.IntegerField(
