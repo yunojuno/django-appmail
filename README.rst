@@ -4,9 +4,6 @@
 .. image:: https://badge.fury.io/py/django-appmail.svg
     :target: https://badge.fury.io/py/django-appmail
 
-.. image:: https://codecov.io/gh/yunojuno/django-appmail/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/yunojuno/django-appmail
-
 Django-AppMail
 ==============
 
