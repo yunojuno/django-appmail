@@ -26,6 +26,11 @@ class EmailTemplateAdmin(ModelAdmin):
         'render_html',
     )
 
+    search_fields = (
+        'name',
+        'subject'
+    )
+
     def _iframe(self, url):
         return (
             "<iframe class='appmail' src='{}' onload='resizeIframe(this)'></iframe><br/>"
@@ -48,10 +53,11 @@ class EmailTemplateAdmin(ModelAdmin):
     def render_text(self, obj):
         if obj.id is None:
             url = ''
-        url = reverse(
-            'appmail:render_template_body_text',
-            kwargs={'template_id': obj.id}
-        )
+        else:
+            url = reverse(
+                'appmail:render_template_body_text',
+                kwargs={'template_id': obj.id}
+            )
         return self._iframe(url)
     render_text.short_description = 'Rendered body (plain)'
     render_text.allow_tags = True
@@ -59,10 +65,11 @@ class EmailTemplateAdmin(ModelAdmin):
     def render_html(self, obj):
         if obj.id is None:
             url = ''
-        url = reverse(
-            'appmail:render_template_body_html',
-            kwargs={'template_id': obj.id}
-        )
+        else:
+            url = reverse(
+                'appmail:render_template_body_html',
+                kwargs={'template_id': obj.id}
+            )
         return self._iframe(url)
     render_html.short_description = 'Rendered body (html)'
     render_html.allow_tags = True
