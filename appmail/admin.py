@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.contrib.admin import site, ModelAdmin
-from django.urls import reverse
 
+from .compat import reverse
 from .models import EmailTemplate
 
 

@@ -4,3 +4,8 @@ try:
     from unittest import mock
 except ImportError:
     import mock  # noqa
+
+try:
+    from django.urls import reverse
+except ImportError:
+    from django.core.urlresolvers import reverse  # noqa
