@@ -17,9 +17,9 @@ class ViewTests(TestCase):
         # Every test needs access to the request factory.
         self.factory = RequestFactory()
         self.template = EmailTemplate(
-            subject='Hello, {{user.first_name}}',
-            body_text='Hello,\n{{user.first_name}}',
-            body_html="Hello, <b>{{user.first_name}}</b>"
+            subject='ßello, {{user.first_name}}',
+            body_text='ßello,\n{{user.first_name}}',
+            body_html="ßello, <b>{{user.first_name}}</b>"
         ).save()
         self.subject_url = reverse(
             'appmail:render_template_subject',
@@ -51,7 +51,7 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # should render the template with the dummy context
         self.assertEqual(
-            response.content,
+            response.content.decode('utf-8'),
             template.render_subject(template.subject_context)
         )
 
@@ -84,7 +84,7 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         # should render the template with the dummy context
         self.assertEqual(
-            response.content,
+            response.content.decode('utf-8'),
             template.render_body(
                 template.body_text_context,
                 EmailTemplate.CONTENT_TYPE_PLAIN
@@ -97,7 +97,7 @@ class ViewTests(TestCase):
             EmailTemplate.CONTENT_TYPE_HTML
         )
         self.assertEqual(
-            response.content,
+            response.content.decode('utf-8'),
             template.render_body(
                 template.body_html_context,
                 EmailTemplate.CONTENT_TYPE_HTML
@@ -112,6 +112,6 @@ class ViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
-            response.content,
+            response.content.decode('utf-8'),
             "Invalid content_type specified."
         )
