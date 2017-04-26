@@ -1,8 +1,51 @@
 # -*- coding: utf-8 -*-
-from django.contrib.admin import site, ModelAdmin
+from django.contrib.admin import site, ModelAdmin, SimpleListFilter
+from django.core.exceptions import ValidationError
+from django.utils.translation import ugettext_lazy as _
 
 from .compat import reverse
 from .models import EmailTemplate
+
+
+class ValidTemplateListFilter(SimpleListFilter):
+
+    """Filter on whether the template can be rendered or not."""
+
+    title = _('Is valid')
+    parameter_name = 'valid'
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each
+        tuple is the coded value for the option that will
+        appear in the URL query. The second element is the
+        human-readable name for the option that will appear
+        in the right sidebar.
+        """
+        return (
+            ('1', _('True')),
+            ('0', _('False')),
+        )
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value
+        provided in the query string and retrievable via
+        `self.value()`.
+        """
+        valid_ids = []
+        invalid_ids = []
+        for obj in queryset:
+            try:
+                obj.clean()
+                valid_ids.append(obj.pk)
+            except ValidationError:
+                invalid_ids.append(obj.pk)
+
+        if self.value() == '1':
+            return queryset.filter(pk__in=valid_ids)
+        if self.value() == '0':
+            return queryset.filter(pk__in=invalid_ids)
 
 
 class EmailTemplateAdmin(ModelAdmin):
@@ -12,12 +55,13 @@ class EmailTemplateAdmin(ModelAdmin):
         'subject',
         'language',
         'version',
+        'is_valid'
     )
 
     list_filter = (
-        'name',
         'language',
-        'version'
+        'version',
+        ValidTemplateListFilter
     )
 
     readonly_fields = (
@@ -37,6 +81,15 @@ class EmailTemplateAdmin(ModelAdmin):
             "<a href='{}' target='_blank'>View in new tab.</a>"
             .format(url, url)
         )
+
+    def is_valid(self, obj):
+        """Return True if the template can be rendered."""
+        try:
+            obj.clean()
+            return True
+        except ValidationError:
+            return False
+    is_valid.boolean = True
 
     def render_subject(self, obj):
         if obj.id is None:
