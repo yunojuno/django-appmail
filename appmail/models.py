@@ -205,3 +205,9 @@ class EmailTemplate(models.Model):
             alternatives=[(html, EmailTemplate.CONTENT_TYPE_HTML)],
             **email_kwargs
         )
+
+    def clone(self):
+        """Create a copy of the current object, increase version by 1."""
+        self.pk = None
+        self.version += 1
+        return self.save()

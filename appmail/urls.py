@@ -4,7 +4,8 @@ from django.conf.urls import url
 
 from .views import (
     render_template_body,
-    render_template_subject
+    render_template_subject,
+    send_test_email
 )
 
 urlpatterns = [
@@ -24,5 +25,10 @@ urlpatterns = [
         r'^templates/(?P<template_id>\d+)/subject.txt$',
         render_template_subject,
         name="render_template_subject"
+    ),
+    url(
+        r'^templates/test$',
+        send_test_email,
+        name="send_test_email"
     ),
 ]

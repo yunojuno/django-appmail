@@ -1,0 +1,36 @@
+{% extends "admin/base_site.html" %}
+{% load i18n l10n admin_urls static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {{ media }}
+    <script type="text/javascript" src="{% static 'admin/js/cancel.js' %}"></script>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} app-{{ opts.app_label }} model-{{ opts.model_name }} delete-confirmation delete-selected-confirmation{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {% trans 'Send test emails' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<h2>{% trans "Test Emails" %}</h2>
+<p>The following email templates will be sent, using a dummy auto-generated context.</p>
+<ul>
+{% for template in templates %}
+    <li><strong>{{ template.name }}</strong>: "{{ template.subject }}"</li>
+{% endfor %}
+</ul>
+<form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <div>
+        <input type="submit" value="{% trans "Send" %}" />
+    <a href="{% url opts|admin_urlname:'changelist' %}" class="button cancel-link">{% trans "Cancel" %}</a>
+    </div>
+    </form>
+{% endblock %}
