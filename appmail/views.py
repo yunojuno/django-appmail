@@ -3,14 +3,19 @@
 These views are intended for use in rendering email templates
 within the admin site, and supporting preview functionality.
 """
+import logging
+
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse, HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render, reverse
+from django.shortcuts import get_object_or_404, render
 from django.utils.translation import ugettext_lazy as _
 
+from .compat import reverse
 from .forms import MultiEmailTestForm, MultiEmailTemplateField
 from .models import EmailTemplate
+
+logger = logging.getLogger(__name__)
 
 
 @user_passes_test(lambda u: u.is_staff)
@@ -65,8 +70,9 @@ def send_test_email(request):
                         request,
                         _("Sent test email '%s' to %s" % (template.name, ', '.join(email.to)))
                     )
-                except Exception:
-                    messages.error(request, _("Error sending test email '%s'" % template.name))
+                except Exception as ex:
+                    logger.exception("Error sending test email")
+                    messages.error(request, _("Error sending test email '%s': %s" % (template.name, ex)))
         else:
             messages.error(request, _("Error sending test emails"))
 
