@@ -19,9 +19,25 @@
 {% endblock %}
 
 {% block content %}
-<h2>{% trans "Send Test Email" %} &rarr; <code>{{ template.name }}</code></h2>
-<form method="post">{% csrf_token %}
-<table>{{ form.as_table }}</table>
-<input type="submit" value="{%  trans 'Send' %}" name="_send">
-</form>
+<h2>{% trans "Send Test Email" %}</h2>
+<p>Use the form below to populate the email attributes.</p>
+<ul>
+{% for template in templates %}
+    <li><strong>{{ template.name }}</strong>: "{{ template.subject }}"</li>
+{% endfor %}
+</ul>
+<fieldset class="module aligned">
+    <form method="post">{% csrf_token %}
+    {% for f in form %}
+    <div class="form-row field-name">
+        <div>
+            {{ f.label }}
+            {{ f }}
+            <p class="help">Template name - must be unique for a given language/version combination.</p>
+        </div>
+    </div>
+    {% endfor %}
+    </form>
+</fieldset>
+
 {% endblock %}

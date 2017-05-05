@@ -5,6 +5,7 @@ from django.conf.urls import url
 from .views import (
     render_template_body,
     render_template_subject,
+    send_test_emails,
     send_test_email
 )
 
@@ -27,7 +28,12 @@ urlpatterns = [
         name="render_template_subject"
     ),
     url(
-        r'^templates/test$',
+        r'^templates/tests$',
+        send_test_emails,
+        name="send_test_emails"
+    ),
+    url(
+        r'^templates/test/(?P<template_id>\d+)$',
         send_test_email,
         name="send_test_email"
     ),

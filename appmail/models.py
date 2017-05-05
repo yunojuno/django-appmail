@@ -104,6 +104,10 @@ class EmailTemplate(models.Model):
     class Meta:
         unique_together = ("name", "language", "version")
 
+    def placeholder_context(self):
+        """Return placeholder context that can be used for testing."""
+        return helpers.get_context(''.join([self.subject, self.body_text, self.body_html]))
+
     @property
     def subject_context(self):
         """Sample template context for subject property."""

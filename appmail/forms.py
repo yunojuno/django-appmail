@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
+import json
+
 from django import forms
 from django.core.validators import validate_email
 from django.utils.translation import ugettext_lazy as _
 
 from .models import EmailTemplate
+from .settings import DEFAULT_SENDER
 
 
 class MultiEmailField(forms.Field):
@@ -56,3 +59,58 @@ class MultiEmailTestForm(forms.Form):
                 to=self.cleaned_data.get('to'),
             )
             yield template, email
+
+
+class EmailTestForm(forms.Form):
+
+    """Renders email template on intermediate page."""
+
+    from_email = forms.EmailField(
+        label=_("From"),
+        help_text=_("Email address to be used as the sender")
+    )
+    to = MultiEmailField(
+        label=_("To"),
+        help_text=_("Comma separated list of email addresses")
+    )
+    cc = MultiEmailField(
+        label=_("cc"),
+        help_text=_("Comma separated list of email addresses"),
+        required=False
+    )
+    bcc = MultiEmailField(
+        label=_("bcc"),
+        help_text=_("Comma separated list of email addresses"),
+        required=False
+    )
+    context = forms.CharField(
+        widget=forms.Textarea,
+        help_text=_("JSON used to render the subject and body templates")
+    )
+
+    def __init__(self, template, *args, **kwargs):
+        self.template = template
+        super(EmailTestForm, self).__init__(*args, **kwargs)
+        self.fields['from_email'].initial = DEFAULT_SENDER
+        self.fields['context'].initial = json.dumps(
+            self.template.placeholder_context(),
+            indent=4,
+            sort_keys=True
+        )
+
+    def clean_context(self):
+        """Load text input back into JSON."""
+        try:
+            return json.loads(self.cleaned_data['context'])
+        except ValueError as ex:
+            raise forms.ValidationError(_("Invalid JSON: %s" % ex))
+
+    def email(self):
+        """Return EmailMultiMessage object from template and form data."""
+        return self.template.create_message(
+            self.cleaned_data['context'],
+            from_email=self.cleaned_data['from_email'],
+            to=self.cleaned_data['to'],
+            cc=self.cleaned_data['cc'],
+            bcc=self.cleaned_data['bcc'],
+        )

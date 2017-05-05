@@ -80,7 +80,7 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     )
     actions = (
         'clone_templates',
-        'send_test_email',
+        'send_test_emails',
     )
 
     def _iframe(self, url):
@@ -143,11 +143,11 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     render_html.short_description = 'Rendered body (html)'
     render_html.allow_tags = True
 
-    def send_test_email(self, request, queryset):
+    def send_test_emails(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
-        url = '%s?templates=%s' % (reverse('appmail:send_test_email'), ','.join(selected))
+        url = '%s?templates=%s' % (reverse('appmail:send_test_emails'), ','.join(selected))
         return HttpResponseRedirect(url)
-    send_test_email.short_description = _("Send test email for selected templates")
+    send_test_emails.short_description = _("Send test email for selected templates")
 
     def clone_templates(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
