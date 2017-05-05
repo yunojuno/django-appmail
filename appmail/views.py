@@ -51,32 +51,24 @@ def send_test_emails(request):
         field = MultiEmailTemplateField()
         templates = field.to_python(request.GET['templates'])
         form = MultiEmailTestForm(initial=request.GET)
-        return render(
-            request,
-            'appmail/send_test_emails.html',
-            {
-                'form': form,
-                'opts': EmailTemplate._meta,
-                'templates': templates
-            }
-        )
+
     elif request.method == 'POST':
         form = MultiEmailTestForm(request.POST)
         if form.is_valid():
             for template, email in form.emails():
-                try:
-                    email.send()
-                    messages.success(
-                        request,
-                        _("Sent test email '%s' to %s" % (template.name, ', '.join(email.to)))
-                    )
-                except Exception as ex:
-                    logger.exception("Error sending test email")
-                    messages.error(request, _("Error sending test email '%s': %s" % (template.name, ex)))  # noqa
-        else:
-            messages.error(request, _("Error sending test emails"))
+                _send_email(email, template, request)
+            return HttpResponseRedirect(reverse('admin:appmail_emailtemplate_changelist'))
 
-        return HttpResponseRedirect(reverse('admin:appmail_emailtemplate_changelist'))
+    return render(
+        request,
+        'appmail/send_test_emails.html',
+        {
+            'form': form,
+            'templates': templates,
+            # opts are used for rendering some page furniture - breadcrumbs etc.
+            'opts': EmailTemplate._meta,
+        }
+    )
 
 
 @user_passes_test(lambda u: u.is_staff)
@@ -91,18 +83,8 @@ def send_test_email(request, template_id):
         form = EmailTestForm(template, request.POST)
         if form.is_valid():
             email = form.email()
-            try:
-                email.send()
-            except Exception as ex:
-                logger.exception("Error sending test email")
-                messages.error(request, _("Error sending test email '%s': %s" % (template.name, ex)))  # noqa
-            else:
-                messages.success(
-                    request,
-                    _("Sent test email '%s' to %s" % (template.name, ', '.join(email.to)))
-                )
-            finally:
-                return HttpResponseRedirect(reverse('admin:appmail_emailtemplate_changelist'))
+            _send_email(email, template, request)
+            return HttpResponseRedirect(reverse('admin:appmail_emailtemplate_changelist'))
 
     return render(
         request,
@@ -114,3 +96,17 @@ def send_test_email(request, template_id):
             'opts': EmailTemplate._meta,
         }
     )
+
+
+def _send_email(email, template, request):
+    """Helper method to send email and set messages."""
+    try:
+        email.send()
+    except Exception as ex:
+        logger.exception("Error sending test email")
+        messages.error(request, _("Error sending test email '%s': %s" % (template.name, ex)))  # noqa
+    else:
+        messages.success(
+            request,
+            _("'%s' email sent to '%s'" % (template.name, ', '.join(email.to)))
+        )

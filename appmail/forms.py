@@ -44,7 +44,8 @@ class MultiEmailTestForm(forms.Form):
     """Renders email templates on confirmation page."""
 
     to = MultiEmailField(
-        label=_("To"),
+        label=_("Recipients"),
+        help_text=_("Comma-sparated list of email addresses")
     )
     # comma separated list of template ids.
     templates = MultiEmailTemplateField(
