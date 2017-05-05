@@ -13,7 +13,7 @@ from django.template import (
 )
 
 from . import helpers
-from .settings import VALIDATE_ON_SAVE
+from .settings import VALIDATE_ON_SAVE, ADD_EXTRA_HEADERS
 
 
 class EmailTemplateQuerySet(models.query.QuerySet):
@@ -109,6 +109,14 @@ class EmailTemplate(models.Model):
         return helpers.get_context(''.join([self.subject, self.body_text, self.body_html]))
 
     @property
+    def extra_headers(self):
+        return{
+            'X-Appmail-Template': (
+                'name=%s; language=%s; version=%s' % (self.name, self.language, self.version)
+            )
+        }
+
+    @property
     def subject_context(self):
         """Sample template context for subject property."""
         return helpers.get_context(self.subject)
@@ -201,6 +209,9 @@ class EmailTemplate(models.Model):
         subject = self.render_subject(context)
         body = self.render_body(context, content_type=EmailTemplate.CONTENT_TYPE_PLAIN)
         html = self.render_body(context, content_type=EmailTemplate.CONTENT_TYPE_HTML)
+        if ADD_EXTRA_HEADERS:
+            email_kwargs['headers'] = email_kwargs.get('headers', {})
+            email_kwargs['headers'].update(self.extra_headers)
         # alternatives is a list of (content, mimetype) tuples
         # https://github.com/django/django/blob/master/django/core/mail/message.py#L435
         return EmailMultiAlternatives(
