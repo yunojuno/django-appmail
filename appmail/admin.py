@@ -82,6 +82,40 @@ class EmailTemplateAdmin(admin.ModelAdmin):
         'clone_templates',
         'send_test_emails',
     )
+    fieldsets = (
+        (
+            'Basic Information',
+            {
+                'fields': (
+                    'name',
+                    'description',
+                    'language',
+                    'version',
+                )
+            }
+        ),
+        (
+            'Templates',
+            {
+                'fields': (
+                    'subject',
+                    'body_text',
+                    'body_html',
+                )
+            }
+        ),
+        (
+            'Sample Output',
+            {
+                'fields': (
+                    'test_context',
+                    'render_subject',
+                    'render_text',
+                    'render_html',
+                )
+            }
+        )
+    )
 
     def _iframe(self, url):
         return (

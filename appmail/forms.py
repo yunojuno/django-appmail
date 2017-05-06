@@ -95,7 +95,7 @@ class EmailTestForm(forms.Form):
         super(EmailTestForm, self).__init__(*args, **kwargs)
         self.fields['from_email'].initial = DEFAULT_SENDER
         self.fields['context'].initial = json.dumps(
-            self.template.placeholder_context(),
+            self.template.test_context,
             indent=4,
             sort_keys=True
         )
