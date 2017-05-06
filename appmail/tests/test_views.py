@@ -52,7 +52,7 @@ class ViewTests(TestCase):
         # should render the template with the dummy context
         self.assertEqual(
             response.content.decode('utf-8'),
-            template.render_subject(template.subject_context)
+            template.render_subject(template.test_context)
         )
 
     def test_render_template_body(self):
@@ -86,7 +86,7 @@ class ViewTests(TestCase):
         self.assertEqual(
             response.content.decode('utf-8'),
             template.render_body(
-                template.body_text_context,
+                template.test_context,
                 EmailTemplate.CONTENT_TYPE_PLAIN
             )
         )
@@ -99,7 +99,7 @@ class ViewTests(TestCase):
         self.assertEqual(
             response.content.decode('utf-8'),
             template.render_body(
-                template.body_html_context,
+                template.test_context,
                 EmailTemplate.CONTENT_TYPE_HTML
             )
         )
