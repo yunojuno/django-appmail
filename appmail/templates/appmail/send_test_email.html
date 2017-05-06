@@ -13,20 +13,36 @@
 {% endblock %}
 
 {% block content %}
-<h2>{% trans "Send Test Email" %} &rarr; <code>{{ template.name }}</code></h2>
-<form method="post">{% csrf_token %}
-    <fieldset class="module aligned ">
-        {% for field in form %}
-        <div class="form-row field-{{field.html_name}}">
-            <div>
-                {{ field.errors }} {{ field.label_tag }} {{ field }} {% if field.help_text %}
-                <p class="help">{{ field.help_text|safe }}</p>
-                {% endif %}
+<h1>{% trans "Send Test Emails" %}</h1>
+<div class="module">
+    <h2>Templates to test</h2>
+    <ul>
+    {% for template in templates %}
+        <li><strong>{{ template.name }}</strong>: "{{ template.subject }}"</li>
+    {% endfor %}
+    </ul>
+</div>
+<div class="module">
+    <h2>Test attributes</h2>
+    <form method="post">{% csrf_token %}
+        <fieldset class="module aligned ">
+            {% for field in form %}
+            {% if field.is_hidden %}
+                {{ field }}
+            {% else %}
+            <div class="form-row field-{{field.html_name}}">
+                <div>
+                    {{ field.errors }}
+                    <label for="{{ field.id_for_label }}" {% if field.field.required %}class="required"{% endif %}>{{ field.label }}:</label>
+                    {{ field }} {% if field.help_text %}
+                    <p class="help">{{ field.help_text|safe }}</p>
+                    {% endif %}
+                </div>
             </div>
-        </div>
-        {% endfor %}
-    </fieldset>
-    <input type="submit" value="send" />
-</form>
-
+            {% endif %}
+            {% endfor %}
+        </fieldset>
+        <input type="submit" value="send" />
+    </form>
+</div>
 {% endblock %}

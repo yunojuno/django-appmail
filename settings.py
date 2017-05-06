@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
 
+import dj_database_url
+
 DEBUG = True
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'test.db',
-    }
-}
+DATABASES = {'default': dj_database_url.config()}
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -69,4 +66,4 @@ STATIC_URL = '/static/'
 
 assert DEBUG is True, "This project is only intended to be used for testing."
 
-APPMAIL_DEFAULT_SENDER = 'Test <test@example.com>'
+APPMAIL_DEFAULT_SENDER = 'test@example.com'

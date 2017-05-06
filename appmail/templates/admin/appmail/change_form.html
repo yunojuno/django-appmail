@@ -13,7 +13,7 @@ iframe.appmail{
 {% block object-tools-items %}
     {{ block.super }}
     <li>
-        <a href="{% url 'appmail:send_test_email' template_id=original.id %}">{% trans "Send test" %}</a>
+        <a href="{% url 'appmail:send_test_email' %}?templates={{ original.id }}">{% trans "Send test" %}</a>
     </li>
 {% endblock %}
 {% block admin_change_form_document_ready %}

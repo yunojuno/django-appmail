@@ -179,7 +179,7 @@ class EmailTemplateAdmin(admin.ModelAdmin):
 
     def send_test_emails(self, request, queryset):
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
-        url = '%s?templates=%s' % (reverse('appmail:send_test_emails'), ','.join(selected))
+        url = '%s?templates=%s' % (reverse('appmail:send_test_email'), ','.join(selected))
         return HttpResponseRedirect(url)
     send_test_emails.short_description = _("Send test email for selected templates")
 

@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 import json
+import logging
 
 from django import forms
+from django.contrib import messages
 from django.core.validators import validate_email
 from django.utils.translation import ugettext_lazy as _
 
 from .models import EmailTemplate
-from .settings import DEFAULT_SENDER
+
+logger = logging.getLogger(__name__)
 
 
 class MultiEmailField(forms.Field):
@@ -39,29 +42,6 @@ class MultiEmailTemplateField(forms.Field):
         return EmailTemplate.objects.filter(pk__in=value.split(','))
 
 
-class MultiEmailTestForm(forms.Form):
-
-    """Renders email templates on confirmation page."""
-
-    to = MultiEmailField(
-        label=_("Recipients"),
-        help_text=_("Comma-sparated list of email addresses")
-    )
-    # comma separated list of template ids.
-    templates = MultiEmailTemplateField(
-        widget=forms.HiddenInput()
-    )
-
-    def emails(self):
-        """EmailMultiPart objects from templates and form data."""
-        for template in self.cleaned_data.get('templates'):
-            email = template.create_message(
-                template.body_html_context,
-                to=self.cleaned_data.get('to'),
-            )
-            yield template, email
-
-
 class EmailTestForm(forms.Form):
 
     """Renders email template on intermediate page."""
@@ -89,16 +69,10 @@ class EmailTestForm(forms.Form):
         required=False,
         help_text=_("JSON used to render the subject and body templates")
     )
-
-    def __init__(self, template, *args, **kwargs):
-        self.template = template
-        super(EmailTestForm, self).__init__(*args, **kwargs)
-        self.fields['from_email'].initial = DEFAULT_SENDER
-        self.fields['context'].initial = json.dumps(
-            self.template.test_context,
-            indent=4,
-            sort_keys=True
-        )
+    # comma separated list of template ids.
+    templates = MultiEmailTemplateField(
+        widget=forms.HiddenInput()
+    )
 
     def clean_context(self):
         """Load text input back into JSON."""
@@ -107,12 +81,26 @@ class EmailTestForm(forms.Form):
         except ValueError as ex:
             raise forms.ValidationError(_("Invalid JSON: %s" % ex))
 
-    def email(self):
-        """Return EmailMultiMessage object from template and form data."""
-        return self.template.create_message(
-            self.cleaned_data['context'],
-            from_email=self.cleaned_data['from_email'],
-            to=self.cleaned_data['to'],
-            cc=self.cleaned_data['cc'],
-            bcc=self.cleaned_data['bcc'],
-        )
+    def send_emails(self, request):
+        """Send test emails."""
+        for template in self.cleaned_data.get('templates'):
+            email = template.create_message(
+                self.cleaned_data['context'],
+                from_email=self.cleaned_data['from_email'],
+                to=self.cleaned_data['to'],
+                cc=self.cleaned_data['cc'],
+                bcc=self.cleaned_data['bcc']
+            )
+            try:
+                email.send()
+            except Exception as ex:
+                logger.exception("Error sending test email")
+                messages.error(
+                    request,
+                    _("Error sending test email '%s': %s" % (template.name, ex))
+                )
+            else:
+                messages.success(
+                    request,
+                    _("'%s' email sent to '%s'" % (template.name, ', '.join(email.to)))
+                )
