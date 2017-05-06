@@ -86,6 +86,7 @@ class EmailTestForm(forms.Form):
     )
     context = forms.CharField(
         widget=forms.Textarea,
+        required=False,
         help_text=_("JSON used to render the subject and body templates")
     )
 
