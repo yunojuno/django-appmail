@@ -70,3 +70,17 @@ class HelperTests(TestCase):
                 }
             }
         )
+
+    def test_merge_dicts(self):
+        self.assertEqual(
+            helpers.merge_dicts({'foo': 1}),
+            {'foo': 1}
+        )
+        self.assertEqual(
+            helpers.merge_dicts({'foo': 1}, {'bar': 2}),
+            {'foo': 1, 'bar': 2}
+        )
+        self.assertEqual(
+            helpers.merge_dicts({'foo': 1}, {'foo': 2}),
+            {'foo': 2}
+        )

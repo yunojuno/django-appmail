@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
 
+import dj_database_url
+
 DEBUG = True
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'test.db',
-    }
-}
+DATABASES = {'default': dj_database_url.config()}
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -51,6 +48,8 @@ TEMPLATES = [
     },
 ]
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
 # NB - this is good for local testing only
 DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
@@ -66,3 +65,5 @@ APPEND_SLASH = True
 STATIC_URL = '/static/'
 
 assert DEBUG is True, "This project is only intended to be used for testing."
+
+APPMAIL_DEFAULT_SENDER = 'test@example.com'

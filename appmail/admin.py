@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
-from django.contrib.admin import site, ModelAdmin, SimpleListFilter
+from django.contrib import admin
+from django.contrib import messages
 from django.core.exceptions import ValidationError
+from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
 
 from .compat import reverse
 from .models import EmailTemplate
 
 
-class ValidTemplateListFilter(SimpleListFilter):
+class ValidTemplateListFilter(admin.SimpleListFilter):
 
     """Filter on whether the template can be rendered or not."""
 
@@ -48,13 +50,15 @@ class ValidTemplateListFilter(SimpleListFilter):
             return queryset.filter(pk__in=invalid_ids)
 
 
-class EmailTemplateAdmin(ModelAdmin):
+class EmailTemplateAdmin(admin.ModelAdmin):
 
     list_display = (
         'name',
         'subject',
         'language',
         'version',
+        'has_text',
+        'has_html',
         'is_valid'
     )
 
@@ -74,6 +78,44 @@ class EmailTemplateAdmin(ModelAdmin):
         'name',
         'subject'
     )
+    actions = (
+        'clone_templates',
+        'send_test_emails',
+    )
+    fieldsets = (
+        (
+            'Basic Information',
+            {
+                'fields': (
+                    'name',
+                    'description',
+                    'language',
+                    'version',
+                )
+            }
+        ),
+        (
+            'Templates',
+            {
+                'fields': (
+                    'subject',
+                    'body_text',
+                    'body_html',
+                )
+            }
+        ),
+        (
+            'Sample Output',
+            {
+                'fields': (
+                    'test_context',
+                    'render_subject',
+                    'render_text',
+                    'render_html',
+                )
+            }
+        )
+    )
 
     def _iframe(self, url):
         return (
@@ -81,6 +123,14 @@ class EmailTemplateAdmin(ModelAdmin):
             "<a href='{}' target='_blank'>View in new tab.</a>"
             .format(url, url)
         )
+
+    def has_text(self, obj):
+        return len(obj.body_text or '') > 0
+    has_text.boolean = True
+
+    def has_html(self, obj):
+        return len(obj.body_html or '') > 0
+    has_html.boolean = True
 
     def is_valid(self, obj):
         """Return True if the template can be rendered."""
@@ -127,5 +177,23 @@ class EmailTemplateAdmin(ModelAdmin):
     render_html.short_description = 'Rendered body (html)'
     render_html.allow_tags = True
 
+    def send_test_emails(self, request, queryset):
+        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+        url = '{}?templates={}'.format(
+            reverse('appmail:send_test_email'),
+            ','.join(selected)
+        )
+        return HttpResponseRedirect(url)
+    send_test_emails.short_description = _("Send test email for selected templates")
 
-site.register(EmailTemplate, EmailTemplateAdmin)
+    def clone_templates(self, request, queryset):
+        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+        templates = EmailTemplate.objects.filter(pk__in=selected)
+        for template in templates:
+            template.clone()
+            messages.success(request, _("Cloned template '%s'" % template.name))
+        return HttpResponseRedirect(request.path)
+    clone_templates.short_description = _("Clone selected email templates")
+
+
+admin.site.register(EmailTemplate, EmailTemplateAdmin)

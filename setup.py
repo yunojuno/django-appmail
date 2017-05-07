@@ -9,9 +9,12 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name="django-appmail",
-    version="0.4.2",
+    version="0.5",
     packages=find_packages(),
-    install_requires=['Django>=1.8'],
+    install_requires=[
+        'Django>1.8',
+        'psycopg2>=2.7.1',
+    ],
     include_package_data=True,
     description='Django app for managing localised email templates.',
     long_description=README,
@@ -23,7 +26,6 @@ setup(
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',
-        'Framework :: Django :: 1.8',
         'Framework :: Django :: 1.9',
         'Framework :: Django :: 1.10',
         'Framework :: Django :: 1.11',

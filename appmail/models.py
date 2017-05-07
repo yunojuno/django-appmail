@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.conf import settings
+from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
@@ -11,9 +12,10 @@ from django.template import (
     TemplateDoesNotExist,
     TemplateSyntaxError
 )
+from django.utils.translation import ugettext_lazy as _
 
 from . import helpers
-from .settings import VALIDATE_ON_SAVE
+from .settings import VALIDATE_ON_SAVE, ADD_EXTRA_HEADERS
 
 
 class EmailTemplateQuerySet(models.query.QuerySet):
@@ -58,13 +60,13 @@ class EmailTemplate(models.Model):
 
     name = models.CharField(
         max_length=100,
-        help_text="Template name - must be unique for a given language/version combination.",
-        verbose_name='Template name',
+        help_text=_("Template name - must be unique for a given language/version combination."),
+        verbose_name=_('Template name'),
         db_index=True
     )
     description = models.CharField(
         max_length=100,
-        help_text="Optional description. e.g. used to differentiate variants ('new header').",
+        help_text=_("Optional description. e.g. used to differentiate variants ('new header')."),
         blank=True
     )
     # language is free text and not a choices field as we make no assumption
@@ -72,31 +74,36 @@ class EmailTemplate(models.Model):
     language = models.CharField(
         max_length=20,
         default=settings.LANGUAGE_CODE,
-        help_text=(
+        help_text=_(
             "Used to support localisation of emails, defaults to `settings.LANGUAGE_CODE`, "
             "but can be any string, e.g. 'London', 'NYC'."
         ),
-        verbose_name='Language',
+        verbose_name=_('Language'),
         db_index=True
     )
     version = models.IntegerField(
         default=0,
-        help_text="Integer value - can be used for versioning or A/B testing.",
-        verbose_name='Version (or variant)',
+        help_text=_("Integer value - can be used for versioning or A/B testing."),
+        verbose_name=_('Version (or variant)'),
         db_index=True
     )
     subject = models.CharField(
         max_length=100,
-        help_text="Email subject line (may contain template variables).",
-        verbose_name='Subject line template'
+        help_text=_("Email subject line (may contain template variables)."),
+        verbose_name=_('Subject line template')
     )
     body_text = models.TextField(
-        help_text="Plain text content (may contain template variables).",
-        verbose_name='Plain text template'
+        help_text=_("Plain text content (may contain template variables)."),
+        verbose_name=_('Plain text template')
     )
     body_html = models.TextField(
-        help_text="HTML content (may contain template variables).",
-        verbose_name='HTML template'
+        help_text=_("HTML content (may contain template variables)."),
+        verbose_name=_('HTML template')
+    )
+    test_context = JSONField(
+        default=dict,
+        blank=True,
+        help_text=_("Dummy JSON used for test rendering (set automatically on first save).")
     )
 
     objects = EmailTemplateQuerySet().as_manager()
@@ -105,22 +112,21 @@ class EmailTemplate(models.Model):
         unique_together = ("name", "language", "version")
 
     @property
-    def subject_context(self):
-        """Sample template context for subject property."""
-        return helpers.get_context(self.subject)
-
-    @property
-    def body_text_context(self):
-        """Sample template context for body_text property."""
-        return helpers.get_context(self.body_text)
-
-    @property
-    def body_html_context(self):
-        """Sample template context for body_html property."""
-        return helpers.get_context(self.body_html)
+    def extra_headers(self):
+        return{
+            'X-Appmail-Template': (
+                'name=%s; language=%s; version=%s' % (self.name, self.language, self.version)
+            )
+        }
 
     def save(self, *args, **kwargs):
         """Validate template rendering before saving object."""
+        if self.pk is None:
+            self.test_context = helpers.get_context(
+                self.subject +
+                self.body_text +
+                self.body_html
+            )
         if VALIDATE_ON_SAVE:
             self.clean()
         super(EmailTemplate, self).save(*args, **kwargs)
@@ -144,7 +150,7 @@ class EmailTemplate(models.Model):
         try:
             self.render_subject({})
         except TemplateDoesNotExist as ex:
-            return {'subject': "Template does not exist: {}".format(ex)}
+            return {'subject': _("Template does not exist: {}".format(ex))}
         except TemplateSyntaxError as ex:
             return {'subject': str(ex)}
         else:
@@ -152,7 +158,7 @@ class EmailTemplate(models.Model):
 
     def render_body(self, context, content_type=CONTENT_TYPE_PLAIN):
         """Render email body in plain text or HTML format."""
-        assert content_type in EmailTemplate.CONTENT_TYPES, ("Invalid content type.")
+        assert content_type in EmailTemplate.CONTENT_TYPES, _("Invalid content type.")
         if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
             return Template(self.body_text).render(Context(context))
         if content_type == EmailTemplate.CONTENT_TYPE_HTML:
@@ -160,7 +166,7 @@ class EmailTemplate(models.Model):
 
     def _validate_body(self, content_type):
         """Try rendering the body template and capture any errors."""
-        assert content_type in EmailTemplate.CONTENT_TYPES, ("Invalid content type.")
+        assert content_type in EmailTemplate.CONTENT_TYPES, _("Invalid content type.")
         if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
             field_name = 'body_text'
         if content_type == EmailTemplate.CONTENT_TYPE_HTML:
@@ -168,7 +174,7 @@ class EmailTemplate(models.Model):
         try:
             self.render_body({}, content_type=content_type)
         except TemplateDoesNotExist as ex:
-            return {field_name: "Template does not exist: {}".format(ex)}
+            return {field_name: _("Template does not exist: {}".format(ex))}
         except TemplateSyntaxError as ex:
             return {field_name: str(ex)}
         else:
@@ -193,10 +199,13 @@ class EmailTemplate(models.Model):
 
         """
         for kw in ('subject', 'body', 'alternatives'):
-            assert kw not in email_kwargs, "Invalid create_message kwarg: '{}'".format(kw)
+            assert kw not in email_kwargs, _("Invalid create_message kwarg: '{}'".format(kw))
         subject = self.render_subject(context)
         body = self.render_body(context, content_type=EmailTemplate.CONTENT_TYPE_PLAIN)
         html = self.render_body(context, content_type=EmailTemplate.CONTENT_TYPE_HTML)
+        if ADD_EXTRA_HEADERS:
+            email_kwargs['headers'] = email_kwargs.get('headers', {})
+            email_kwargs['headers'].update(self.extra_headers)
         # alternatives is a list of (content, mimetype) tuples
         # https://github.com/django/django/blob/master/django/core/mail/message.py#L435
         return EmailMultiAlternatives(
@@ -205,3 +214,9 @@ class EmailTemplate(models.Model):
             alternatives=[(html, EmailTemplate.CONTENT_TYPE_HTML)],
             **email_kwargs
         )
+
+    def clone(self):
+        """Create a copy of the current object, increase version by 1."""
+        self.pk = None
+        self.version += 1
+        return self.save()

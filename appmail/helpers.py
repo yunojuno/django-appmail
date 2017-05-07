@@ -86,3 +86,11 @@ def fill_leaf_values(tree):
         else:
             fill_leaf_values(tree[k])
     return tree
+
+
+def merge_dicts(*dicts):
+    """Merge multiple dicts into one."""
+    context = {}
+    for d in dicts:
+        context.update(d)
+    return context

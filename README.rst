@@ -79,6 +79,13 @@ but there is a valid assumption behind it - if you are changing your base
 templates you are probably involving designers and developers already, so
 having to rely on a developer to make the changes is acceptable.
 
+**Sending test emails**
+
+You can send test emails to an email address through the admin list view.
+There is a custom admin action 'Send test emails' which will redirect to
+an intermediate page where you can enter the recipient email address and
+send the email.
+
 Tests
 -----
 

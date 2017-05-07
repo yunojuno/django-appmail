@@ -38,22 +38,6 @@ class EmailTemplateTests(TestCase):
         template = EmailTemplate()
         self.assertEqual(template.language, settings.LANGUAGE_CODE)
         self.assertEqual(template.version, 0)
-        self.assertEqual(template.subject_context, {})
-        self.assertEqual(template.body_text_context, {})
-        self.assertEqual(template.body_html_context, {})
-
-    def test_subject_context(self):
-        """Check the context properties are converting as expected."""
-        content = '{{a}} {{b.c}}'
-        context = {'a': "A", 'b': {'c': "C"}}
-        template = EmailTemplate(
-            subject=content,
-            body_text=content,
-            body_html=content
-        )
-        self.assertEqual(template.subject_context, context)
-        self.assertEqual(template.body_text_context, context)
-        self.assertEqual(template.body_html_context, context)
 
     @mock.patch.object(EmailTemplate, 'clean')
     def test_save(self, mock_clean):
@@ -176,3 +160,17 @@ class EmailTemplateTests(TestCase):
         self.assertRaises(AssertionError, template.create_message, {}, subject='foo')
         self.assertRaises(AssertionError, template.create_message, {}, body='foo')
         self.assertRaises(AssertionError, template.create_message, {}, alternatives='foo')
+
+    def test_clone_template(self):
+        template = EmailTemplate(
+            name='Test template',
+            language='en-us',
+            version=0
+        ).save()
+        pk = template.pk
+        clone = template.clone()
+        template = EmailTemplate.objects.get(id=pk)
+        self.assertEqual(clone.name, template.name)
+        self.assertEqual(clone.language, template.language)
+        self.assertEqual(clone.version, 1)
+        self.assertNotEqual(clone.id, template.id)
