@@ -8,7 +8,10 @@ from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.test import TestCase
 
 from ..compat import mock
-from ..models import EmailTemplate
+from ..models import (
+    EmailTemplate,
+    combine_contexts
+)
 
 
 class EmailTemplateQuerySetTests(TestCase):
@@ -160,3 +163,26 @@ class EmailTemplateTests(TestCase):
         self.assertRaises(AssertionError, template.create_message, {}, subject='foo')
         self.assertRaises(AssertionError, template.create_message, {}, body='foo')
         self.assertRaises(AssertionError, template.create_message, {}, alternatives='foo')
+
+    def test_clone_template(self):
+        template = EmailTemplate(
+            name='Test template',
+            language='en-us',
+            version=0
+        ).save()
+        pk = template.pk
+        clone = template.clone()
+        template = EmailTemplate.objects.get(id=pk)
+        self.assertEqual(clone.name, template.name)
+        self.assertEqual(clone.language, template.language)
+        self.assertEqual(clone.version, 1)
+        self.assertNotEqual(clone.id, template.id)
+
+    def test_combine_contexts(self):
+        template1 = EmailTemplate(test_context={'foo': 1})
+        self.assertEqual(combine_contexts(template1), template1.test_context)
+        template2 = EmailTemplate(test_context={'bar': 2})
+        self.assertEqual(
+            combine_contexts(template1, template2),
+            {'foo': 1, 'bar': 2}
+        )

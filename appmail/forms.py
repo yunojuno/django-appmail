@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.core.validators import validate_email
 from django.utils.translation import ugettext_lazy as _
 
-from .models import EmailTemplate
+from .models import EmailTemplate, EmailTemplateQuerySet
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +18,13 @@ class MultiEmailField(forms.Field):
 
     def to_python(self, value):
         """Normalize data to a list of strings."""
-        # Return an empty list if no input was given.
+        if isinstance(value, list):
+            return value
+
         if not value:
             return []
-        return value.split(',')
+
+        return [v.strip() for v in value.split(',')]
 
     def validate(self, value):
         """Check if value consists only of valid emails."""
@@ -37,9 +40,14 @@ class MultiEmailTemplateField(forms.Field):
 
     def to_python(self, value):
         """Normalize data to a queryset of EmailTemplates."""
+        if isinstance(value, EmailTemplateQuerySet):
+            return value
+
         if not value:
             return EmailTemplate.objects.none()
-        return EmailTemplate.objects.filter(pk__in=value.split(','))
+
+        values = [int(i) for i in value.split(',')]
+        return EmailTemplate.objects.filter(pk__in=values)
 
 
 class EmailTestForm(forms.Form):
@@ -78,7 +86,7 @@ class EmailTestForm(forms.Form):
         """Load text input back into JSON."""
         try:
             return json.loads(self.cleaned_data['context'])
-        except ValueError as ex:
+        except (TypeError, ValueError) as ex:
             raise forms.ValidationError(_("Invalid JSON: %s" % ex))
 
     def send_emails(self, request):
