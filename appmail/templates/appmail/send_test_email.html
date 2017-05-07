@@ -15,7 +15,7 @@
 {% block content %}
 <h1>{% trans "Send Test Emails" %}</h1>
 <div class="module">
-    <h2>Templates to test</h2>
+    <h2>{% trans 'Templates to test' %}</h2>
     <ul>
     {% for template in templates %}
         <li><strong>{{ template.name }}</strong>: "{{ template.subject }}"</li>
@@ -24,8 +24,8 @@
 </div>
 <div class="module">
     <h2>Test attributes</h2>
-    <form method="post">{% csrf_token %}
-        <fieldset class="module aligned ">
+    <form method="post" id="test_email_form">{% csrf_token %}
+        <fieldset class="module aligned">
             {% for field in form %}
             {% if field.is_hidden %}
                 {{ field }}

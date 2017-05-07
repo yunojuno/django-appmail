@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 from django.core.exceptions import ValidationError
+from django.core.mail import EmailMultiAlternatives
+from django.http import HttpRequest
 from django.test import TestCase
 
 from ..compat import mock
@@ -54,3 +56,42 @@ class EmailTestFormTests(TestCase):
         self.assertEqual(form.clean_context(), True)
         form.cleaned_data['context'] = True
         self.assertRaises(ValidationError, form.clean_context)
+
+    def test__create_message(self):
+        form = EmailTestForm()
+        form.cleaned_data = {
+            'context': 'true',
+            'to': ['fred@example.com'],
+            'cc': [],
+            'bcc': [],
+            'from_email': 'donotreply@example.com'
+        }
+        template = EmailTemplate()
+        email = form._create_message(template)
+        self.assertEqual(email.from_email, 'donotreply@example.com')
+        self.assertEqual(email.to, ['fred@example.com'])
+        self.assertEqual(email.cc, [])
+        self.assertEqual(email.bcc, [])
+
+    @mock.patch('appmail.forms.messages')
+    @mock.patch.object(EmailMultiAlternatives, 'send')
+    def test_send_emails(self, mock_send, mock_messages):
+        template = EmailTemplate()
+        form = EmailTestForm()
+        form.cleaned_data = {
+            'context': 'true',
+            'to': ['fred@example.com'],
+            'cc': [],
+            'bcc': [],
+            'from_email': 'donotreply@example.com',
+            'templates': [template]
+        }
+        request = HttpRequest()
+        form.send_emails(request)
+        mock_send.assert_called_once()
+        mock_messages.success.assert_called_once()
+
+        # test email failure
+        mock_send.side_effect = Exception()
+        form.send_emails(request)
+        mock_messages.error.assert_called_once()

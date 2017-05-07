@@ -84,21 +84,26 @@ class EmailTestForm(forms.Form):
 
     def clean_context(self):
         """Load text input back into JSON."""
+        context = self.cleaned_data['context'] or '{}'
         try:
-            return json.loads(self.cleaned_data['context'])
+            return json.loads(context)
         except (TypeError, ValueError) as ex:
             raise forms.ValidationError(_("Invalid JSON: %s" % ex))
+
+    def _create_message(self, template):
+        """Create EmailMultiMessage from form data."""
+        return template.create_message(
+            self.cleaned_data['context'],
+            from_email=self.cleaned_data['from_email'],
+            to=self.cleaned_data['to'],
+            cc=self.cleaned_data['cc'],
+            bcc=self.cleaned_data['bcc']
+        )
 
     def send_emails(self, request):
         """Send test emails."""
         for template in self.cleaned_data.get('templates'):
-            email = template.create_message(
-                self.cleaned_data['context'],
-                from_email=self.cleaned_data['from_email'],
-                to=self.cleaned_data['to'],
-                cc=self.cleaned_data['cc'],
-                bcc=self.cleaned_data['bcc']
-            )
+            email = self._create_message(template)
             try:
                 email.send()
             except Exception as ex:

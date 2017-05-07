@@ -220,11 +220,3 @@ class EmailTemplate(models.Model):
         self.pk = None
         self.version += 1
         return self.save()
-
-
-def combine_contexts(*templates):
-    """Return combined dict of test_contexts from multiple templates."""
-    context = {}
-    for template in templates:
-        context.update(template.test_context)
-    return context

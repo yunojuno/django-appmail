@@ -7,11 +7,13 @@ import json
 import logging
 
 from django.contrib.auth.decorators import user_passes_test
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 
+from .compat import reverse
 from .forms import MultiEmailTemplateField, EmailTestForm
-from .models import EmailTemplate, combine_contexts
+from .helpers import merge_dicts
+from .models import EmailTemplate
 from .settings import DEFAULT_SENDER
 
 logger = logging.getLogger(__name__)
@@ -43,7 +45,8 @@ def send_test_email(request):
     # use the field.to_python here as belt-and-braces - if it works here
     # we can be confident that it'll work on the POST.
     templates = MultiEmailTemplateField().to_python(request.GET['templates'])
-    context = json.dumps(combine_contexts(*templates), indent=4, sort_keys=True)
+    contexts = merge_dicts(*[t.test_context for t in templates])
+    context = json.dumps(contexts, indent=4, sort_keys=True)
     initial = {
         'templates': request.GET['templates'],
         'from_email': DEFAULT_SENDER,
@@ -51,19 +54,24 @@ def send_test_email(request):
     }
     if request.method == 'GET':
         form = EmailTestForm(initial=initial)
+        return render(
+            request,
+            'appmail/send_test_email.html',
+            {
+                'form': form,
+                'templates': templates,
+                # opts are used for rendering some page furniture - breadcrumbs etc.
+                'opts': EmailTemplate._meta,
+            }
+        )
 
     elif request.method == 'POST':
         form = EmailTestForm(request.POST)
         if form.is_valid():
             form.send_emails(request)
-
-    return render(
-        request,
-        'appmail/send_test_email.html',
-        {
-            'form': form,
-            'templates': templates,
-            # opts are used for rendering some page furniture - breadcrumbs etc.
-            'opts': EmailTemplate._meta,
-        }
-    )
+        return HttpResponseRedirect(
+            '{}?{}'.format(
+                reverse('appmail:send_test_email'),
+                request.GET.urlencode()
+            )
+        )
