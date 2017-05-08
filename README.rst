@@ -45,6 +45,7 @@ The core requirements are:
 4. Support base templates
 5. Template versioning
 6. Language support
+7. Send test emails
 
 **Template properties**
 
@@ -82,14 +83,24 @@ having to rely on a developer to make the changes is acceptable.
 **Sending test emails**
 
 You can send test emails to an email address through the admin list view.
-There is a custom admin action 'Send test emails' which will redirect to
-an intermediate page where you can enter the recipient email address and
-send the email.
+
+.. image:: screenshots/appmail-test-email-action.png
+    :alt: EmailTemplate admin change form
+
+The custom admin action 'Send test emails' will redirect to an intermediate
+page where you can enter the recipient email address and send the email:
+
+.. image:: screenshots/appmail-test-email-send.png
+
+There is also a linkon individual template admin pages (top-right, next to the history link):
+
+.. image:: screenshots/appmail-template-change-form.png
+    :alt: EmailTemplate admin change form
 
 Tests
 -----
 
-There is a test suite for the app, which is best run through `tox`.
+There is a test suite for the app, which is best run through ``tox``.
 
 Licence
 -------
