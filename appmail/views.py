@@ -65,13 +65,24 @@ def send_test_email(request):
             }
         )
 
-    elif request.method == 'POST':
+    if request.method == 'POST':
         form = EmailTestForm(request.POST)
         if form.is_valid():
             form.send_emails(request)
-        return HttpResponseRedirect(
-            '{}?{}'.format(
-                reverse('appmail:send_test_email'),
-                request.GET.urlencode()
+            return HttpResponseRedirect(
+                '{}?{}'.format(
+                    reverse('appmail:send_test_email'),
+                    request.GET.urlencode()
+                )
             )
-        )
+        else:
+            return render(
+                request,
+                'appmail/send_test_email.html',
+                {
+                    'form': form,
+                    'templates': templates,
+                    # opts are used for rendering some page furniture - breadcrumbs etc.
+                    'opts': EmailTemplate._meta,
+                }
+            )
