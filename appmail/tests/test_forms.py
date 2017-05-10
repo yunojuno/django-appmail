@@ -3,12 +3,37 @@ from __future__ import unicode_literals
 
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
+from django.forms import Textarea
 from django.http import HttpRequest
 from django.test import TestCase
 
 from ..compat import mock
-from ..forms import MultiEmailField, MultiEmailTemplateField, EmailTestForm
+from ..forms import (
+    EmailTestForm,
+    JSONWidget,
+    MultiEmailField,
+    MultiEmailTemplateField,
+)
 from ..models import EmailTemplate
+
+
+class JSONWidgetTests(TestCase):
+
+    def test_format_value(self):
+        widget = JSONWidget()
+        self.assertEqual(widget.format_value(None), '{}')
+        self.assertEqual(widget.format_value(''), '{}')
+        self.assertEqual(widget.format_value('{"foo": true}'), '{\n    "foo": true\n}')
+        self.assertRaises(AssertionError, widget.format_value, {"foo": True})
+
+    def test_render(self):
+        widget = JSONWidget()
+        textarea = Textarea()
+        for val in [None, '', '{"foo": true}']:
+            self.assertEqual(
+                widget.render('test', val),
+                textarea.render('test', widget.format_value(val), attrs=widget.DEFAULT_ATTRS)
+            )
 
 
 class MultiEmailFieldTests(TestCase):

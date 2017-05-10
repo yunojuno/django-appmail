@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+from six import string_types
 
 from django import forms
 from django.contrib import messages
@@ -10,6 +11,24 @@ from django.utils.translation import ugettext_lazy as _
 from .models import EmailTemplate, EmailTemplateQuerySet
 
 logger = logging.getLogger(__name__)
+
+
+class JSONWidget(forms.Textarea):
+
+    """Pretty print JSON in a text area."""
+
+    DEFAULT_ATTRS = {'class': 'vLargeTextField', 'rows': 15}
+
+    def format_value(self, value):
+        """Pretty format JSON text."""
+        value = value or '{}'
+        assert isinstance(value, string_types), _("Invalid JSON text input type")
+        value = json.loads(value)
+        return json.dumps(value, indent=4, sort_keys=True)
+
+    def render(self, name, value, attrs=DEFAULT_ATTRS):
+        value = self.format_value(value)
+        return super(JSONWidget, self).render(name, value, attrs=attrs)
 
 
 class MultiEmailField(forms.Field):
