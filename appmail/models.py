@@ -120,14 +120,21 @@ class EmailTemplate(models.Model):
         }
 
     def save(self, *args, **kwargs):
-        """Validate template rendering before saving object."""
+        """Update dummy context on first save and validate template contents.
+
+        Kwargs:
+            validate: set to False to bypass template validation; defaults
+                to settings.VALIDATE_ON_SAVE.
+
+        """
         if self.pk is None:
             self.test_context = helpers.get_context(
                 self.subject +
                 self.body_text +
                 self.body_html
             )
-        if VALIDATE_ON_SAVE:
+        validate = kwargs.pop('validate', VALIDATE_ON_SAVE)
+        if validate:
             self.clean()
         super(EmailTemplate, self).save(*args, **kwargs)
         return self

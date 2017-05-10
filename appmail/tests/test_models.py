@@ -52,6 +52,9 @@ class EmailTemplateTests(TestCase):
         with mock.patch('appmail.models.VALIDATE_ON_SAVE', True):
             template.save()
             self.assertEqual(mock_clean.call_count, 1)
+            # test the override
+            template.save(validate=False)
+            self.assertEqual(mock_clean.call_count, 1)
 
     @mock.patch.object(EmailTemplate, 'render_subject')
     def test__validate_subject(self, mock_render):
