@@ -9,6 +9,7 @@ import logging
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from .compat import reverse
 from .forms import MultiEmailTemplateField, EmailTestForm
@@ -20,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 @user_passes_test(lambda u: u.is_staff)
+@xframe_options_sameorigin
 def render_template_subject(request, template_id):
     """Render the template subject."""
     template = get_object_or_404(EmailTemplate, id=template_id)
@@ -28,6 +30,7 @@ def render_template_subject(request, template_id):
 
 
 @user_passes_test(lambda u: u.is_staff)
+@xframe_options_sameorigin
 def render_template_body(request, template_id, content_type):
     """Render the template body as plain text or HTML."""
     template = get_object_or_404(EmailTemplate, id=template_id)
