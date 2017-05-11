@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.conf import settings
+from django.utils.module_loading import import_string
 
 # Validate that EmailTemplate can be rendered without
 # error on each save. Defaults to True.

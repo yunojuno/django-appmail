@@ -85,7 +85,7 @@ class HelperTests(TestCase):
             {'foo': 2}
         )
 
-    def test_run_context_processors(self):
+    def test_patch_context(self):
 
         foo = {'foo': 1}
         bar = {'bar': 2}
@@ -98,16 +98,16 @@ class HelperTests(TestCase):
             return baz
 
         self.assertEqual(
-            helpers.run_context_processors(foo, []),
+            helpers.patch_context(foo, []),
             foo
         )
 
         self.assertEqual(
-            helpers.run_context_processors(foo, [cp1]),
+            helpers.patch_context(foo, [cp1]),
             helpers.merge_dicts(foo, bar)
         )
 
         self.assertEqual(
-            helpers.run_context_processors(foo, [cp1, cp2]),
+            helpers.patch_context(foo, [cp1, cp2]),
             helpers.merge_dicts(foo, bar, baz)
         )
