@@ -85,7 +85,7 @@ class EmailTestFormTests(TestCase):
     def test__create_message(self):
         form = EmailTestForm()
         form.cleaned_data = {
-            'context': 'true',
+            'context': {'foo': 'bar'},
             'to': ['fred@example.com'],
             'cc': [],
             'bcc': [],
@@ -104,7 +104,7 @@ class EmailTestFormTests(TestCase):
         template = EmailTemplate()
         form = EmailTestForm()
         form.cleaned_data = {
-            'context': 'true',
+            'context': {'foo': 'bar'},
             'to': ['fred@example.com'],
             'cc': [],
             'bcc': [],

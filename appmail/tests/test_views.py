@@ -149,5 +149,11 @@ class ViewTests(TestCase):
             'templates': template.pk
         }
         response = self.client.post(url, payload)
+        self.assertEqual(mock_send.call_count, 1)
         mock_send.assert_called_once_with(response.wsgi_request)
         self.assertEqual(response.status_code, 302)
+
+        # check that bad response returns 422
+        response = self.client.post(url, {})
+        self.assertEqual(mock_send.call_count, 1)
+        self.assertEqual(response.status_code, 422)

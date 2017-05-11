@@ -25,8 +25,8 @@ logger = logging.getLogger(__name__)
 def render_template_subject(request, template_id):
     """Render the template subject."""
     template = get_object_or_404(EmailTemplate, id=template_id)
-    context = template.test_context
-    return HttpResponse(template.render_subject(context), content_type='text/plain')
+    html = template.render_subject(template.test_context)
+    return HttpResponse(html, content_type='text/plain')
 
 
 @user_passes_test(lambda u: u.is_staff)
@@ -87,5 +87,6 @@ def send_test_email(request):
                     'templates': templates,
                     # opts are used for rendering some page furniture - breadcrumbs etc.
                     'opts': EmailTemplate._meta,
-                }
+                },
+                status=422
             )

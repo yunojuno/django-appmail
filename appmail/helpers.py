@@ -94,3 +94,9 @@ def merge_dicts(*dicts):
     for d in dicts:
         context.update(d)
     return context
+
+
+def run_context_processors(context, processors, request=None):
+    """Add template context_processor content to context."""
+    cpx = [p(request) for p in processors]
+    return merge_dicts(context, *cpx)

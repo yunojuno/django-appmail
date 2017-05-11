@@ -84,3 +84,30 @@ class HelperTests(TestCase):
             helpers.merge_dicts({'foo': 1}, {'foo': 2}),
             {'foo': 2}
         )
+
+    def test_run_context_processors(self):
+
+        foo = {'foo': 1}
+        bar = {'bar': 2}
+        baz = {'baz': 3}
+
+        def cp1(request):
+            return bar
+
+        def cp2(request):
+            return baz
+
+        self.assertEqual(
+            helpers.run_context_processors(foo, []),
+            foo
+        )
+
+        self.assertEqual(
+            helpers.run_context_processors(foo, [cp1]),
+            helpers.merge_dicts(foo, bar)
+        )
+
+        self.assertEqual(
+            helpers.run_context_processors(foo, [cp1, cp2]),
+            helpers.merge_dicts(foo, bar, baz)
+        )

@@ -130,6 +130,8 @@ class EmailTemplateAdmin(admin.ModelAdmin):
             .format(url, url)
         )
 
+    # these functions are here rather than on the model so that we can get the
+    # boolean icon.
     def has_text(self, obj):
         return len(obj.body_text or '') > 0
     has_text.boolean = True

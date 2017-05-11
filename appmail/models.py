@@ -15,7 +15,11 @@ from django.template import (
 from django.utils.translation import ugettext_lazy as _
 
 from . import helpers
-from .settings import VALIDATE_ON_SAVE, ADD_EXTRA_HEADERS
+from .settings import (
+    ADD_EXTRA_HEADERS,
+    VALIDATE_ON_SAVE,
+    CONTEXT_PROCESSORS
+)
 
 
 class EmailTemplateQuerySet(models.query.QuerySet):
@@ -148,9 +152,10 @@ class EmailTemplate(models.Model):
         if validation_errors:
             raise ValidationError(validation_errors)
 
-    def render_subject(self, context):
+    def render_subject(self, context, processors=CONTEXT_PROCESSORS):
         """Render subject line."""
-        return Template(self.subject).render(Context(context))
+        ctx = Context(helpers.run_context_processors(context, processors))
+        return Template(self.subject).render(ctx)
 
     def _validate_subject(self):
         """Try rendering the body template and capture any errors."""
@@ -163,13 +168,14 @@ class EmailTemplate(models.Model):
         else:
             return {}
 
-    def render_body(self, context, content_type=CONTENT_TYPE_PLAIN):
+    def render_body(self, context, content_type=CONTENT_TYPE_PLAIN, processors=CONTEXT_PROCESSORS):
         """Render email body in plain text or HTML format."""
         assert content_type in EmailTemplate.CONTENT_TYPES, _("Invalid content type.")
+        ctx = Context(helpers.run_context_processors(context, processors))
         if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
-            return Template(self.body_text).render(Context(context))
+            return Template(self.body_text).render(ctx)
         if content_type == EmailTemplate.CONTENT_TYPE_HTML:
-            return Template(self.body_html).render(Context(context))
+            return Template(self.body_html).render(ctx)
 
     def _validate_body(self, content_type):
         """Try rendering the body template and capture any errors."""

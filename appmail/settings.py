@@ -8,3 +8,5 @@ VALIDATE_ON_SAVE = getattr(settings, 'APPMAIL_VALIDATE_ON_SAVE', True)
 DEFAULT_SENDER = getattr(settings, 'APPMAIL_DEFAULT_SENDER', None)
 # if True then add X-Appmail-* headers to outgoung email objects
 ADD_EXTRA_HEADERS = getattr(settings, 'APPMAIL_ADD_HEADERS', True)
+# list of context processor functions applied on each render
+CONTEXT_PROCESSORS = [import_string(s) for s in getattr(settings, 'APPMAIL_CONTEXT_PROCESSORS', [])]  # noqa
