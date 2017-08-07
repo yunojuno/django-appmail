@@ -65,13 +65,15 @@ class EmailTemplateAdmin(admin.ModelAdmin):
         'version',
         'has_text',
         'has_html',
-        'is_valid'
+        'is_valid',
+        'is_active'
     )
 
     list_filter = (
         'language',
         'version',
-        ValidTemplateListFilter
+        ValidTemplateListFilter,
+        'is_active'
     )
 
     readonly_fields = (

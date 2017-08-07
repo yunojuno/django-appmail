@@ -15,6 +15,11 @@ class EmailTemplateQuerySetTests(TestCase):
 
     """appmail.models.EmailTemplateQuerySet model tests."""
 
+    def test_active(self):
+        template1 = EmailTemplate(name='test1', language='en-us').save()
+        template2 = EmailTemplate(name='test2', language='en-us', is_active=False).save()
+        self.assertEqual(EmailTemplate.objects.active().get(), template1)
+
     def test_current(self):
         # manually setting the version in the wrong order, so the first
         # template is actually the last, when ordered by version.

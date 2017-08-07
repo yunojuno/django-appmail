@@ -12,7 +12,7 @@ from django.template import (
     TemplateDoesNotExist,
     TemplateSyntaxError
 )
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import ugettext_lazy as _lazy
 
 from . import helpers
 from .settings import (
@@ -24,21 +24,17 @@ from .settings import (
 
 class EmailTemplateQuerySet(models.query.QuerySet):
 
+    def active(self):
+        """Returns active templates only."""
+        return self.filter(is_active=True)
+
     def current(self, name, language=settings.LANGUAGE_CODE):
         """Returns the latest version of a template."""
-        templates = self.filter(
-            name=name,
-            language=language
-        )
-        return templates.order_by('version').last()
+        return self.active().filter(name=name, language=language).order_by('version').last()
 
     def version(self, name, version, language=settings.LANGUAGE_CODE):
         """Returns a specific version of a template."""
-        return self.get(
-            name=name,
-            language=language,
-            version=version
-        )
+        return self.active().get(name=name, language=language, version=version)
 
 
 class EmailTemplate(models.Model):
@@ -64,13 +60,13 @@ class EmailTemplate(models.Model):
 
     name = models.CharField(
         max_length=100,
-        help_text=_("Template name - must be unique for a given language/version combination."),
-        verbose_name=_('Template name'),
+        help_text=_lazy("Template name - must be unique for a given language/version combination."),
+        verbose_name=_lazy('Template name'),
         db_index=True
     )
     description = models.CharField(
         max_length=100,
-        help_text=_("Optional description. e.g. used to differentiate variants ('new header')."),
+        help_text=_lazy("Optional description. e.g. used to differentiate variants ('new header')."),  # noqa
         blank=True
     )
     # language is free text and not a choices field as we make no assumption
@@ -78,36 +74,41 @@ class EmailTemplate(models.Model):
     language = models.CharField(
         max_length=20,
         default=settings.LANGUAGE_CODE,
-        help_text=_(
+        help_text=_lazy(
             "Used to support localisation of emails, defaults to `settings.LANGUAGE_CODE`, "
             "but can be any string, e.g. 'London', 'NYC'."
         ),
-        verbose_name=_('Language'),
+        verbose_name=_lazy('Language'),
         db_index=True
     )
     version = models.IntegerField(
         default=0,
-        help_text=_("Integer value - can be used for versioning or A/B testing."),
-        verbose_name=_('Version (or variant)'),
+        help_text=_lazy("Integer value - can be used for versioning or A/B testing."),
+        verbose_name=_lazy('Version (or variant)'),
         db_index=True
     )
     subject = models.CharField(
         max_length=100,
-        help_text=_("Email subject line (may contain template variables)."),
-        verbose_name=_('Subject line template')
+        help_text=_lazy("Email subject line (may contain template variables)."),
+        verbose_name=_lazy('Subject line template')
     )
     body_text = models.TextField(
-        help_text=_("Plain text content (may contain template variables)."),
-        verbose_name=_('Plain text template')
+        help_text=_lazy("Plain text content (may contain template variables)."),
+        verbose_name=_lazy('Plain text template')
     )
     body_html = models.TextField(
-        help_text=_("HTML content (may contain template variables)."),
-        verbose_name=_('HTML template')
+        help_text=_lazy("HTML content (may contain template variables)."),
+        verbose_name=_lazy('HTML template')
     )
     test_context = JSONField(
         default=dict,
         blank=True,
-        help_text=_("Dummy JSON used for test rendering (set automatically on first save).")
+        help_text=_lazy("Dummy JSON used for test rendering (set automatically on first save).")
+    )
+    is_active = models.BooleanField(
+        help_text=_lazy("Set to False to remove from `current` queryset."),
+        verbose_name=_lazy("Active (live)"),
+        default=True
     )
 
     objects = EmailTemplateQuerySet().as_manager()
@@ -162,7 +163,7 @@ class EmailTemplate(models.Model):
         try:
             self.render_subject({})
         except TemplateDoesNotExist as ex:
-            return {'subject': _("Template does not exist: {}".format(ex))}
+            return {'subject': _lazy("Template does not exist: {}".format(ex))}
         except TemplateSyntaxError as ex:
             return {'subject': str(ex)}
         else:
@@ -170,7 +171,7 @@ class EmailTemplate(models.Model):
 
     def render_body(self, context, content_type=CONTENT_TYPE_PLAIN, processors=CONTEXT_PROCESSORS):
         """Render email body in plain text or HTML format."""
-        assert content_type in EmailTemplate.CONTENT_TYPES, _("Invalid content type.")
+        assert content_type in EmailTemplate.CONTENT_TYPES, _lazy("Invalid content type.")
         ctx = Context(helpers.patch_context(context, processors))
         if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
             return Template(self.body_text).render(ctx)
@@ -179,7 +180,7 @@ class EmailTemplate(models.Model):
 
     def _validate_body(self, content_type):
         """Try rendering the body template and capture any errors."""
-        assert content_type in EmailTemplate.CONTENT_TYPES, _("Invalid content type.")
+        assert content_type in EmailTemplate.CONTENT_TYPES, _lazy("Invalid content type.")
         if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
             field_name = 'body_text'
         if content_type == EmailTemplate.CONTENT_TYPE_HTML:
@@ -187,7 +188,7 @@ class EmailTemplate(models.Model):
         try:
             self.render_body({}, content_type=content_type)
         except TemplateDoesNotExist as ex:
-            return {field_name: _("Template does not exist: {}".format(ex))}
+            return {field_name: _lazy("Template does not exist: {}".format(ex))}
         except TemplateSyntaxError as ex:
             return {field_name: str(ex)}
         else:
@@ -212,7 +213,7 @@ class EmailTemplate(models.Model):
 
         """
         for kw in ('subject', 'body', 'alternatives'):
-            assert kw not in email_kwargs, _("Invalid create_message kwarg: '{}'".format(kw))
+            assert kw not in email_kwargs, _lazy("Invalid create_message kwarg: '{}'".format(kw))
         subject = self.render_subject(context)
         body = self.render_body(context, content_type=EmailTemplate.CONTENT_TYPE_PLAIN)
         html = self.render_body(context, content_type=EmailTemplate.CONTENT_TYPE_HTML)
