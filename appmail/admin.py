@@ -99,6 +99,7 @@ class EmailTemplateAdmin(admin.ModelAdmin):
                     'description',
                     'language',
                     'version',
+                    'is_active'
                 )
             }
         ),
