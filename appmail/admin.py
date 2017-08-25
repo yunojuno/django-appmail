@@ -87,6 +87,8 @@ class EmailTemplateAdmin(admin.ModelAdmin):
         'subject'
     )
     actions = (
+        'activate_templates',
+        'deactivate_templates',
         'clone_templates',
         'send_test_emails',
     )
@@ -205,6 +207,22 @@ class EmailTemplateAdmin(admin.ModelAdmin):
             messages.success(request, _("Cloned template '%s'" % template.name))
         return HttpResponseRedirect(request.path)
     clone_templates.short_description = _("Clone selected email templates")
+
+    def activate_templates(self, request, queryset):
+        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+        templates = EmailTemplate.objects.filter(pk__in=selected)
+        count = templates.update(is_active=True)
+        messages.success(request, _("Activated %s templates" % count))
+        return HttpResponseRedirect(request.path)
+    activate_templates.short_description = _("Activate selected email templates")
+
+    def deactivate_templates(self, request, queryset):
+        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
+        templates = EmailTemplate.objects.filter(pk__in=selected)
+        count = templates.update(is_active=False)
+        messages.success(request, _("Deactivated %s templates" % count))
+        return HttpResponseRedirect(request.path)
+    deactivate_templates.short_description = _("Deactivate selected email templates")
 
 
 admin.site.register(EmailTemplate, EmailTemplateAdmin)
