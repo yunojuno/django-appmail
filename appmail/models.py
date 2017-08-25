@@ -116,6 +116,16 @@ class EmailTemplate(models.Model):
     class Meta:
         unique_together = ("name", "language", "version")
 
+    def __str__(self):
+        return "'{}' ({})".format(self.name, self.language)
+
+    def __repr__(self):
+        return (
+            "<EmailTemplate id={} name='{}' language='{}' version={}>".format(
+                self.id, self.name, self.language, self.version
+            )
+        )
+
     @property
     def extra_headers(self):
         return{
