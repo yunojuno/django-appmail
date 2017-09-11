@@ -101,7 +101,16 @@ class EmailTemplateAdmin(admin.ModelAdmin):
                     'description',
                     'language',
                     'version',
-                    'is_active'
+                    'is_active',
+                )
+            }
+        ),
+        (
+            'Email Defaults',
+            {
+                'fields': (
+                    'from_email',
+                    'reply_to',
                 )
             }
         ),

@@ -59,12 +59,13 @@ class EmailTemplate(models.Model):
     CONTENT_TYPES = (CONTENT_TYPE_PLAIN, CONTENT_TYPE_HTML)
 
     name = models.CharField(
+        _lazy('Template name'),
         max_length=100,
         help_text=_lazy("Template name - must be unique for a given language/version combination."),
-        verbose_name=_lazy('Template name'),
         db_index=True
     )
     description = models.CharField(
+        _lazy('Description'),
         max_length=100,
         help_text=_lazy("Optional description. e.g. used to differentiate variants ('new header')."),  # noqa
         blank=True
@@ -72,33 +73,33 @@ class EmailTemplate(models.Model):
     # language is free text and not a choices field as we make no assumption
     # as to how the end user is storing / managing languages.
     language = models.CharField(
+        _lazy('Language'),
         max_length=20,
         default=settings.LANGUAGE_CODE,
         help_text=_lazy(
             "Used to support localisation of emails, defaults to `settings.LANGUAGE_CODE`, "
             "but can be any string, e.g. 'London', 'NYC'."
         ),
-        verbose_name=_lazy('Language'),
         db_index=True
     )
     version = models.IntegerField(
+        _lazy('Version (or variant)'),
         default=0,
         help_text=_lazy("Integer value - can be used for versioning or A/B testing."),
-        verbose_name=_lazy('Version (or variant)'),
         db_index=True
     )
     subject = models.CharField(
+        _lazy('Subject line template'),
         max_length=100,
         help_text=_lazy("Email subject line (may contain template variables)."),
-        verbose_name=_lazy('Subject line template')
     )
     body_text = models.TextField(
+        _lazy('Plain text template'),
         help_text=_lazy("Plain text content (may contain template variables)."),
-        verbose_name=_lazy('Plain text template')
     )
     body_html = models.TextField(
+        _lazy('HTML template'),
         help_text=_lazy("HTML content (may contain template variables)."),
-        verbose_name=_lazy('HTML template')
     )
     test_context = JSONField(
         default=dict,
@@ -106,9 +107,23 @@ class EmailTemplate(models.Model):
         help_text=_lazy("Dummy JSON used for test rendering (set automatically on first save).")
     )
     is_active = models.BooleanField(
+        _lazy("Active (live)"),
         help_text=_lazy("Set to False to remove from `current` queryset."),
-        verbose_name=_lazy("Active (live)"),
         default=True
+    )
+    from_email = models.CharField(
+        _lazy("Sender"),
+        max_length=254,
+        help_text=_lazy(
+            "Default sender address if none specified. Verbose form is accepted."
+        ),
+        default=settings.DEFAULT_FROM_EMAIL
+    )
+    reply_to = models.CharField(
+        _lazy("Reply-To"),
+        max_length=254,
+        help_text=_lazy("Comma separated list of Reply-To recipients."),
+        default=settings.DEFAULT_FROM_EMAIL
     )
 
     objects = EmailTemplateQuerySet().as_manager()
@@ -133,6 +148,11 @@ class EmailTemplate(models.Model):
                 'name=%s; language=%s; version=%s' % (self.name, self.language, self.version)
             )
         }
+
+    @property
+    def reply_to_list(self):
+        """Convert the reply_to field to a list."""
+        return [a.strip() for a in self.reply_to.split(',')]
 
     def save(self, *args, **kwargs):
         """Update dummy context on first save and validate template contents.
@@ -227,6 +247,8 @@ class EmailTemplate(models.Model):
         subject = self.render_subject(context)
         body = self.render_body(context, content_type=EmailTemplate.CONTENT_TYPE_PLAIN)
         html = self.render_body(context, content_type=EmailTemplate.CONTENT_TYPE_HTML)
+        email_kwargs['reply_to'] = email_kwargs.get('reply_to') or self.reply_to_list
+        email_kwargs['from_email'] = email_kwargs.get('from_email') or self.from_email
         if ADD_EXTRA_HEADERS:
             email_kwargs['headers'] = email_kwargs.get('headers', {})
             email_kwargs['headers'].update(self.extra_headers)
