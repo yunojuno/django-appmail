@@ -42,7 +42,13 @@ class EmailTemplateTests(TestCase):
     def test_defaults(self):
         template = EmailTemplate()
         self.assertEqual(template.language, settings.LANGUAGE_CODE)
+        self.assertEqual(template.from_email, settings.DEFAULT_FROM_EMAIL)
+        self.assertEqual(template.reply_to, settings.DEFAULT_FROM_EMAIL)
+        self.assertEqual(template.reply_to_list, [settings.DEFAULT_FROM_EMAIL])
         self.assertEqual(template.version, 0)
+
+        template.reply_to = 'fred@example.com, ginger@example.com'
+        self.assertEqual(template.reply_to_list, ['fred@example.com', 'ginger@example.com'])
 
     @mock.patch.object(EmailTemplate, 'clean')
     def test_save(self, mock_clean):
@@ -152,16 +158,20 @@ class EmailTemplateTests(TestCase):
         self.assertEqual(message.to, [])
         self.assertEqual(message.cc, [])
         self.assertEqual(message.bcc, [])
+        self.assertEqual(message.from_email, settings.DEFAULT_FROM_EMAIL)
+        self.assertEqual(message.reply_to, [settings.DEFAULT_FROM_EMAIL])
 
         message = template.create_message(
             context,
             to=['bruce@kung.fu'],
             cc=['fred@example.com'],
-            bcc=['ginger@example.com']
+            bcc=['ginger@example.com'],
+            from_email='Fred <fred@example.com>'
         )
         self.assertEqual(message.to, ['bruce@kung.fu'])
         self.assertEqual(message.cc, ['fred@example.com'])
         self.assertEqual(message.bcc, ['ginger@example.com'])
+        self.assertEqual(message.from_email, 'Fred <fred@example.com>')
         # and so on - not going to test every property.
 
         # but we will check the three illegal kwargs
