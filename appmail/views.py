@@ -6,6 +6,7 @@ within the admin site, and supporting preview functionality.
 import json
 import logging
 
+from django.conf import settings as django_settings
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
@@ -15,7 +16,6 @@ from .compat import reverse
 from .forms import MultiEmailTemplateField, EmailTestForm
 from .helpers import merge_dicts
 from .models import EmailTemplate
-from .settings import DEFAULT_SENDER
 
 logger = logging.getLogger(__name__)
 
@@ -48,14 +48,21 @@ def send_test_email(request):
     # use the field.to_python here as belt-and-braces - if it works here
     # we can be confident that it'll work on the POST.
     templates = MultiEmailTemplateField().to_python(request.GET['templates'])
-    contexts = merge_dicts(*[t.test_context for t in templates])
-    context = json.dumps(contexts, indent=4, sort_keys=True)
-    initial = {
-        'templates': request.GET['templates'],
-        'from_email': DEFAULT_SENDER,
-        'context': context
-    }
+
     if request.method == 'GET':
+        contexts = merge_dicts(*[t.test_context for t in templates])
+        context = json.dumps(contexts, indent=4, sort_keys=True)
+        initial = {
+            'templates': request.GET['templates'],
+            'context': context
+        }
+        try:
+            template = templates.get()
+            initial['from_email'] = template.from_email
+            initial['reply_to'] = template.reply_to
+        except EmailTemplate.MultipleObjectsReturned:
+            initial['from_email'] = django_settings.DEFAULT_FROM_EMAIL
+            initial['reply_to'] = django_settings.DEFAULT_FROM_EMAIL
         form = EmailTestForm(initial=initial)
         return render(
             request,

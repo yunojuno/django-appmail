@@ -146,6 +146,7 @@ class ViewTests(TestCase):
             'bcc': '',
             'context': '',
             'from_email': 'donotreply@example.com',
+            'reply_to': ['donotreply1@example.com'],
             'templates': template.pk
         }
         response = self.client.post(url, payload)

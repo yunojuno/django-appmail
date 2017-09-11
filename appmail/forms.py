@@ -77,6 +77,10 @@ class EmailTestForm(forms.Form):
         label=_("From"),
         help_text=_("Email address to be used as the sender")
     )
+    reply_to = MultiEmailField(
+        label=_("Reply-To"),
+        help_text=_("Comma separated list of email addresses")
+    )
     to = MultiEmailField(
         label=_("To"),
         help_text=_("Comma separated list of email addresses")
