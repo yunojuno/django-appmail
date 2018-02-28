@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
 from django.contrib import admin
 from django.contrib import messages
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
-from .compat import reverse
 from .forms import JSONWidget
 from .models import EmailTemplate
 

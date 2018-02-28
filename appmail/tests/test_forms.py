@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from unittest import mock
 
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
@@ -7,7 +6,6 @@ from django.forms import Textarea
 from django.http import HttpRequest
 from django.test import TestCase
 
-from ..compat import mock
 from ..forms import (
     EmailTestForm,
     JSONWidget,
@@ -24,7 +22,7 @@ class JSONWidgetTests(TestCase):
         self.assertEqual(widget.format_value(None), '{}')
         self.assertEqual(widget.format_value(''), '{}')
         self.assertEqual(widget.format_value('{"foo": true}'), '{\n    "foo": true\n}')
-        self.assertRaises(AssertionError, widget.format_value, {"foo": True})
+        self.assertRaises(TypeError, widget.format_value, {"foo": True})
 
     def test_render(self):
         widget = JSONWidget()

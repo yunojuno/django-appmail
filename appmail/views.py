@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 These views are intended for use in rendering email templates
 within the admin site, and supporting preview functionality.
@@ -11,8 +10,8 @@ from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.views.decorators.clickjacking import xframe_options_sameorigin
+from django.urls import reverse
 
-from .compat import reverse
 from .forms import MultiEmailTemplateField, EmailTestForm
 from .helpers import merge_dicts
 from .models import EmailTemplate

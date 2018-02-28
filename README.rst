@@ -5,9 +5,17 @@
     :target: https://badge.fury.io/py/django-appmail
 
 Django-AppMail
-==============
+--------------
 
 Django app for managing transactional email templates
+
+Compatibility
+=============
+
+This project now requires Django1.11+ and Python3. If you require python2 support you will have to refer to the python2 branch.
+
+Background
+==========
 
 This project arose out of a project to integrate a large transactional Django
 application with Mandrill, and the lessons learned. It also owes a minor h/t

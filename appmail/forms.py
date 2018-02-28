@@ -1,7 +1,5 @@
-# -*- coding: utf-8 -*-
 import json
 import logging
-from six import string_types
 
 from django import forms
 from django.contrib import messages
@@ -22,7 +20,8 @@ class JSONWidget(forms.Textarea):
     def format_value(self, value):
         """Pretty format JSON text."""
         value = value or '{}'
-        assert isinstance(value, string_types), _("Invalid JSON text input type")
+        if not isinstance(value, str):
+            raise TypeError("Value must JSON parseable string instance")
         value = json.loads(value)
         return json.dumps(value, indent=4, sort_keys=True)
 

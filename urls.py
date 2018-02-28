@@ -1,10 +1,14 @@
-# -*- coding: utf-8 -*-
-from django.conf.urls import url, include
+try:
+    from django.urls import re_path, include
+except ImportError:
+    from django.conf.urls import url as re_path, include
 from django.contrib import admin
+
+import appmail.urls
 
 admin.autodiscover()
 
 urlpatterns = [
-    url(r'^admin/', include(admin.site.urls)),
-    url(r'^appmail/', include('appmail.urls', namespace='appmail')),
+    re_path(r'^admin/', admin.site.urls),
+    re_path(r'^appmail/', include(appmail.urls)),
 ]

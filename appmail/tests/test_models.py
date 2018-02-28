@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from __future__ import unicode_literals
+from unittest import mock
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -7,7 +6,6 @@ from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.test import TestCase
 
-from ..compat import mock
 from ..models import EmailTemplate
 
 
