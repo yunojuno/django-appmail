@@ -4,6 +4,7 @@ from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from django.utils.html import format_html
 from django.utils.translation import ugettext_lazy as _
 
 from .forms import JSONWidget
@@ -137,10 +138,11 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     )
 
     def _iframe(self, url):
-        return (
+        return format_html(
             "<iframe class='appmail' src='{}' onload='resizeIframe(this)'></iframe><br/>"
-            "<a href='{}' target='_blank'>View in new tab.</a>"
-            .format(url, url)
+            "<a href='{}' target='_blank'>View in new tab.</a>",
+            url,
+            url
         )
 
     # these functions are here rather than on the model so that we can get the
@@ -234,3 +236,4 @@ class EmailTemplateAdmin(admin.ModelAdmin):
 
 
 admin.site.register(EmailTemplate, EmailTemplateAdmin)
+
