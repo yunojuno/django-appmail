@@ -10,6 +10,7 @@ from django.template import (
     TemplateSyntaxError
 )
 from django.utils.translation import ugettext_lazy as _lazy
+from html import unescape
 
 from . import helpers
 from .settings import (
@@ -183,7 +184,7 @@ class EmailTemplate(models.Model):
     def render_subject(self, context, processors=CONTEXT_PROCESSORS):
         """Render subject line."""
         ctx = Context(helpers.patch_context(context, processors))
-        return Template(self.subject).render(ctx)
+        return unescape(Template(self.subject).render(ctx))
 
     def _validate_subject(self):
         """Try rendering the body template and capture any errors."""
@@ -201,7 +202,7 @@ class EmailTemplate(models.Model):
         assert content_type in EmailTemplate.CONTENT_TYPES, _lazy("Invalid content type.")
         ctx = Context(helpers.patch_context(context, processors))
         if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
-            return Template(self.body_text).render(ctx)
+            return unescape(Template(self.body_text).render(ctx))
         if content_type == EmailTemplate.CONTENT_TYPE_HTML:
             return Template(self.body_html).render(ctx)
 
