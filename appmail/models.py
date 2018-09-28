@@ -9,6 +9,7 @@ from django.template import (
     TemplateDoesNotExist,
     TemplateSyntaxError
 )
+from django.utils.safestring import mark_safe
 from django.utils.translation import ugettext_lazy as _lazy
 from html import unescape
 
@@ -183,8 +184,8 @@ class EmailTemplate(models.Model):
 
     def render_subject(self, context, processors=CONTEXT_PROCESSORS):
         """Render subject line."""
-        ctx = Context(helpers.patch_context(context, processors))
-        return unescape(Template(self.subject).render(ctx))
+        ctx = self.patch_safe_context(context, processors)
+        return Template(self.subject).render(ctx)
 
     def _validate_subject(self):
         """Try rendering the body template and capture any errors."""
@@ -200,10 +201,11 @@ class EmailTemplate(models.Model):
     def render_body(self, context, content_type=CONTENT_TYPE_PLAIN, processors=CONTEXT_PROCESSORS):
         """Render email body in plain text or HTML format."""
         assert content_type in EmailTemplate.CONTENT_TYPES, _lazy("Invalid content type.")
-        ctx = Context(helpers.patch_context(context, processors))
         if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
+            ctx = self.patch_safe_context(context, processors)
             return unescape(Template(self.body_text).render(ctx))
         if content_type == EmailTemplate.CONTENT_TYPE_HTML:
+            ctx = Context(helpers.patch_context(context, processors))
             return Template(self.body_html).render(ctx)
 
     def _validate_body(self, content_type):
@@ -264,3 +266,7 @@ class EmailTemplate(models.Model):
         self.pk = None
         self.version += 1
         return self.save()
+
+    def patch_safe_context(self, context, processors):
+        safe_context = {key: mark_safe(value) for key, value in context.items()}
+        return Context(helpers.patch_context(safe_context, processors))
