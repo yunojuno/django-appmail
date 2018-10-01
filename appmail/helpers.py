@@ -1,4 +1,5 @@
 import re
+from django.utils.safestring import mark_safe
 
 # regex for extracting django template {{ variable }}s
 TEMPLATE_VARS = re.compile(r'{{([ ._[a-z]*)}}')
@@ -93,7 +94,17 @@ def merge_dicts(*dicts):
     return context
 
 
-def patch_context(context, processors, request=None):
-    """Add template context_processor content to context."""
+def patch_context(context, processors, request=None, safe_string=False):
+    """
+    Add template context_processor content to context.
+    Mark context as safe when appropriate (safe=True).
+    """
     cpx = [p(request) for p in processors]
+    if safe_string:
+        context = mark_context_safe(context)
     return merge_dicts(context, *cpx)
+
+
+def mark_context_safe(context):
+    """Mark context values as safe before escaping them."""
+    return {key: mark_safe(value) for key, value in context.items()}
