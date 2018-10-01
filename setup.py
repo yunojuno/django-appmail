@@ -9,7 +9,7 @@ os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
     name="django-appmail",
-    version="1.0.2",
+    version="1.0.3",
     packages=find_packages(),
     install_requires=[
         'Django>=1.11',
