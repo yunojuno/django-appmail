@@ -177,6 +177,23 @@ class EmailTemplateTests(TestCase):
         self.assertRaises(AssertionError, template.create_message, {}, body='foo')
         self.assertRaises(AssertionError, template.create_message, {}, alternatives='foo')
 
+    def test_create_message__special_characters(self):
+        template = EmailTemplate(
+            subject='Welcome {{ first_name }}',
+            body_text='Hello {{ first_name }}',
+            body_html='<h1>Hello {{first_name}}</h1>'
+        )
+
+        context = {'first_name': 'Test & Company'}
+        message = template.create_message(context)
+        self.assertIsInstance(message, EmailMultiAlternatives)
+        self.assertEqual(message.subject, 'Welcome Test & Company')
+        self.assertEqual(message.body, 'Hello Test & Company')
+        self.assertEqual(
+            message.alternatives,
+            [('<h1>Hello Test &amp; Company</h1>', EmailTemplate.CONTENT_TYPE_HTML)]
+        )
+
     def test_clone_template(self):
         template = EmailTemplate(
             name='Test template',
