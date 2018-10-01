@@ -125,3 +125,27 @@ Usual rules apply:
 3. Submit PR
 
 Please take care to follow the coding style - and PEP8.
+
+
+Release
+-------
+
+If you have found yourself in the situation of having to release a new version, and assuming you already have the necessary PyPi permissions, here are the next steps you need to take:
+
+**1. Update `setup.py` with the bumped version. Push it to master**
+ - PATCH version for backwards-compatible hotfixes
+ - MINOR version for backwards-compatible features
+ - MAJOR version for incompatible features
+
+**2. Tag this new version by running the following commands**
+ - `git tag -a v1.0.x -m v.1.0.x`
+ - `git push --tags`
+
+Now, if you go to github and take a look at the tags, you should be able to see your version among them.
+
+**3. Build the wheel**
+ - `python3 setup.py sdist bdist_wheel`
+
+**4. Upload it on PyPi using twine**
+ - `twine upload dist/*`
+ - you will be asked to provide your PyPi username and password
