@@ -94,17 +94,12 @@ def merge_dicts(*dicts):
     return context
 
 
-def patch_context(context, processors, request=None, safe_string=False):
+def patch_context(context, processors, request=None, mark_context_safe=False):
     """
     Add template context_processor content to context.
     Mark context as safe when appropriate (safe=True).
     """
     cpx = [p(request) for p in processors]
-    if safe_string:
-        context = mark_context_safe(context)
+    if mark_context_safe:
+        context = {key: mark_safe(value) for key, value in context.items()}
     return merge_dicts(context, *cpx)
-
-
-def mark_context_safe(context):
-    """Mark context values as safe before escaping them."""
-    return {key: mark_safe(value) for key, value in context.items()}
