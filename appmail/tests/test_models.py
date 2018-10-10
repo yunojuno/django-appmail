@@ -181,7 +181,7 @@ class EmailTemplateTests(TestCase):
         template = EmailTemplate(
             subject='Welcome {{ first_name }}',
             body_text='Hello {{ first_name }}',
-            body_html='<h1>Hello {{first_name}}</h1>'
+            body_html='<h1>Hello {{ first_name }}</h1>'
         )
 
         context = {'first_name': 'Test & Company'}
@@ -192,6 +192,31 @@ class EmailTemplateTests(TestCase):
         self.assertEqual(
             message.alternatives,
             [('<h1>Hello Test &amp; Company</h1>', EmailTemplate.CONTENT_TYPE_HTML)]
+        )
+
+    def test_create_message__special_characters__complex_context(self):
+        template = EmailTemplate(
+            subject='Hello {{ user.first_name }} and welcome to {{ company_name }}',
+            body_text='Hello {{ user.first_name }} and welcome to {{ company_name }}',
+            body_html='<h1>Hello {{ user.first_name }}</h1></br><p>Welcome to {{ company_name }}</p>'
+        )
+
+        context = {
+            'user': {
+                'first_name': 'Test & Company'
+            },
+            'company_name': 'Me & Co Inc'
+        }
+        message = template.create_message(context)
+        self.assertIsInstance(message, EmailMultiAlternatives)
+        self.assertEqual(message.subject, 'Hello Test & Company and welcome to Me & Co Inc')
+        self.assertEqual(message.body, 'Hello Test & Company and welcome to Me & Co Inc')
+        self.assertEqual(
+            message.alternatives,
+            [(
+                '<h1>Hello Test &amp; Company</h1></br><p>Welcome to Me &amp; Co Inc</p>',
+                EmailTemplate.CONTENT_TYPE_HTML
+            )]
         )
 
     def test_clone_template(self):
