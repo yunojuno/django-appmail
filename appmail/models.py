@@ -182,7 +182,7 @@ class EmailTemplate(models.Model):
 
     def render_subject(self, context, processors=CONTEXT_PROCESSORS):
         """Render subject line."""
-        ctx = Context(helpers.patch_context(context, processors, mark_context_safe=True))
+        ctx = Context(helpers.patch_context(context, processors), autoescape=False)
         return Template(self.subject).render(ctx)
 
     def _validate_subject(self):
@@ -200,7 +200,7 @@ class EmailTemplate(models.Model):
         """Render email body in plain text or HTML format."""
         assert content_type in EmailTemplate.CONTENT_TYPES, _lazy("Invalid content type.")
         if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
-            ctx = Context(helpers.patch_context(context, processors, mark_context_safe=True))
+            ctx = Context(helpers.patch_context(context, processors), autoescape=False)
             return Template(self.body_text).render(ctx)
         if content_type == EmailTemplate.CONTENT_TYPE_HTML:
             ctx = Context(helpers.patch_context(context, processors))
@@ -264,4 +264,5 @@ class EmailTemplate(models.Model):
         self.pk = None
         self.version += 1
         return self.save()
+
 
