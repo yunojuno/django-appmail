@@ -265,4 +265,3 @@ class EmailTemplate(models.Model):
         self.version += 1
         return self.save()
 
-
