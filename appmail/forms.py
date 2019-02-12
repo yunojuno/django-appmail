@@ -25,9 +25,9 @@ class JSONWidget(forms.Textarea):
         value = json.loads(value)
         return json.dumps(value, indent=4, sort_keys=True)
 
-    def render(self, name, value, attrs=DEFAULT_ATTRS):
+    def render(self, name, value, attrs=DEFAULT_ATTRS, renderer=None):
         value = self.format_value(value)
-        return super(JSONWidget, self).render(name, value, attrs=attrs)
+        return super(JSONWidget, self).render(name, value, attrs=attrs, renderer=renderer)
 
 
 class MultiEmailField(forms.Field):
