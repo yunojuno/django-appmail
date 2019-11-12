@@ -9,10 +9,10 @@ from django.conf import settings as django_settings
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
-from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.urls import reverse
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
-from .forms import MultiEmailTemplateField, EmailTestForm
+from .forms import EmailTestForm, MultiEmailTemplateField
 from .helpers import merge_dicts
 from .models import EmailTemplate
 

@@ -1,3 +1,4 @@
+from email.mime.image import MIMEImage
 from unittest import mock
 
 from django.conf import settings
@@ -185,7 +186,16 @@ class EmailTemplateTests(TestCase):
         ):
             template.create_message({}, alternatives="foo")
 
-    def test_create_message__with_attachments_disallowed(self):
+    def test_create_message__with_attachments__allowed(self):
+        template = EmailTemplate(
+            subject="Welcome {{ first_name }}",
+            body_text="Hello {{ first_name }}",
+            body_html="<h1>Hello {{ first_name }}</h1>",
+            supports_attachments=True,
+        )
+        template.create_message({}, attachments=[mock.Mock(spec=MIMEImage)])
+
+    def test_create_message__with_attachments__disallowed(self):
         template = EmailTemplate(
             subject="Welcome {{ first_name }}",
             body_text="Hello {{ first_name }}",
@@ -195,7 +205,7 @@ class EmailTemplateTests(TestCase):
         with self.assertRaisesMessage(
             ValueError, "Email template does not support attachments."
         ):
-            template.create_message({}, attachments=[mock.Mock()])
+            template.create_message({}, attachments=[mock.Mock(spec=MIMEImage)])
 
     def test_create_message__special_characters(self):
         template = EmailTemplate(

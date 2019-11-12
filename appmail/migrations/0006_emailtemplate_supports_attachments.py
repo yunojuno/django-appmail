@@ -14,8 +14,8 @@ class Migration(migrations.Migration):
             model_name="emailtemplate",
             name="supports_attachments",
             field=models.BooleanField(
-                default=True,
-                help_text="If False any attempt to create a message with attachments will error.",
+                default=False,
+                help_text="Does this template support file attachments?",
                 verbose_name="Supports attachments",
             ),
         ),

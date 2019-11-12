@@ -1,5 +1,4 @@
 import re
-from django.utils.safestring import mark_safe
 
 # regex for extracting django template {{ variable }}s
 TEMPLATE_VARS = re.compile(r"{{([ ._[a-z]*)}}")

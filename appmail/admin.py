@@ -1,5 +1,4 @@
-from django.contrib import admin
-from django.contrib import messages
+from django.contrib import admin, messages
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.http import HttpResponseRedirect
@@ -26,10 +25,7 @@ class ValidTemplateListFilter(admin.SimpleListFilter):
         human-readable name for the option that will appear
         in the right sidebar.
         """
-        return (
-            ("1", _("True")),
-            ("0", _("False")),
-        )
+        return (("1", _("True")), ("0", _("False")))
 
     def queryset(self, request, queryset):
         """
@@ -54,9 +50,7 @@ class ValidTemplateListFilter(admin.SimpleListFilter):
 
 class EmailTemplateAdmin(admin.ModelAdmin):
 
-    formfield_overrides = {
-        JSONField: {"widget": JSONWidget},
-    }
+    formfield_overrides = {JSONField: {"widget": JSONWidget}}
 
     list_display = (
         "name",
@@ -71,11 +65,7 @@ class EmailTemplateAdmin(admin.ModelAdmin):
 
     list_filter = ("language", "version", ValidTemplateListFilter, "is_active")
 
-    readonly_fields = (
-        "render_subject",
-        "render_text",
-        "render_html",
-    )
+    readonly_fields = ("render_subject", "render_text", "render_html")
 
     search_fields = ("name", "subject")
     actions = (
@@ -87,10 +77,10 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             "Basic Information",
-            {"fields": ("name", "description", "language", "version", "is_active",)},
+            {"fields": ("name", "description", "language", "version", "is_active")},
         ),
-        ("Email Defaults", {"fields": ("from_email", "reply_to",)}),
-        ("Templates", {"fields": ("subject", "body_text", "body_html",)}),
+        ("Email Defaults", {"fields": ("from_email", "reply_to")}),
+        ("Templates", {"fields": ("subject", "body_text", "body_html")}),
         (
             "Sample Output",
             {

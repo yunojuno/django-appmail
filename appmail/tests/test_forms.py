@@ -6,12 +6,7 @@ from django.forms import Textarea
 from django.http import HttpRequest
 from django.test import TestCase
 
-from ..forms import (
-    EmailTestForm,
-    JSONWidget,
-    MultiEmailField,
-    MultiEmailTemplateField,
-)
+from ..forms import EmailTestForm, JSONWidget, MultiEmailField, MultiEmailTemplateField
 from ..models import EmailTemplate
 
 

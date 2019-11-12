@@ -8,7 +8,7 @@ from django.utils.translation import ugettext as _
 from django.utils.translation import ugettext_lazy as _lazy
 
 from . import helpers
-from .settings import ADD_EXTRA_HEADERS, VALIDATE_ON_SAVE, CONTEXT_PROCESSORS
+from .settings import ADD_EXTRA_HEADERS, CONTEXT_PROCESSORS, VALIDATE_ON_SAVE
 
 
 class EmailTemplateQuerySet(models.query.QuerySet):
@@ -127,10 +127,8 @@ class EmailTemplate(models.Model):
     )
     supports_attachments = models.BooleanField(
         _lazy("Supports attachments"),
-        default=True,
-        help_text=_lazy(
-            "If False any attempt to create a message with attachments will error."
-        ),
+        default=False,
+        help_text=_lazy("Does this template support file attachments?"),
     )
 
     objects = EmailTemplateQuerySet().as_manager()
@@ -142,16 +140,16 @@ class EmailTemplate(models.Model):
         return "'{}' ({})".format(self.name, self.language)
 
     def __repr__(self):
-        return "<EmailTemplate id={} name='{}' language='{}' version={}>".format(
-            self.id, self.name, self.language, self.version
+        return (
+            f"<EmailTemplate id={self.id} name='{self.name}' "
+            f"language='{self.language}' version={self.version}>"
         )
 
     @property
     def extra_headers(self):
         return {
             "X-Appmail-Template": (
-                "name=%s; language=%s; version=%s"
-                % (self.name, self.language, self.version)
+                f"name={self.name}; language={self.language}; version={self.version}"
             )
         }
 
