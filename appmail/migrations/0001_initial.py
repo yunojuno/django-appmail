@@ -9,24 +9,75 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='EmailTemplate',
+            name="EmailTemplate",
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(db_index=True, help_text='Template name - must be unique for a given language/version combination.', max_length=100, verbose_name='Template name')),
-                ('language', models.CharField(db_index=True, default='en-us', help_text='Used to support localisation of emails, defaults to settings.LANGUAGE_CODE.', max_length=20, verbose_name='Language code')),
-                ('version', models.IntegerField(db_index=True, default=0, help_text='Integer value - can be used for versioning or A/B testing.', verbose_name='Version (or variant)')),
-                ('subject', models.CharField(help_text='Email subject line (may contain template variables).', max_length=100, verbose_name='Subject line template')),
-                ('body_text', models.TextField(help_text='Plain text content (may contain template variables).', verbose_name='Plain text template')),
-                ('body_html', models.TextField(help_text='HTML content (may contain template variables).', verbose_name='HTML template')),
+                (
+                    "id",
+                    models.AutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                (
+                    "name",
+                    models.CharField(
+                        db_index=True,
+                        help_text="Template name - must be unique for a given language/version combination.",
+                        max_length=100,
+                        verbose_name="Template name",
+                    ),
+                ),
+                (
+                    "language",
+                    models.CharField(
+                        db_index=True,
+                        default="en-us",
+                        help_text="Used to support localisation of emails, defaults to settings.LANGUAGE_CODE.",
+                        max_length=20,
+                        verbose_name="Language code",
+                    ),
+                ),
+                (
+                    "version",
+                    models.IntegerField(
+                        db_index=True,
+                        default=0,
+                        help_text="Integer value - can be used for versioning or A/B testing.",
+                        verbose_name="Version (or variant)",
+                    ),
+                ),
+                (
+                    "subject",
+                    models.CharField(
+                        help_text="Email subject line (may contain template variables).",
+                        max_length=100,
+                        verbose_name="Subject line template",
+                    ),
+                ),
+                (
+                    "body_text",
+                    models.TextField(
+                        help_text="Plain text content (may contain template variables).",
+                        verbose_name="Plain text template",
+                    ),
+                ),
+                (
+                    "body_html",
+                    models.TextField(
+                        help_text="HTML content (may contain template variables).",
+                        verbose_name="HTML template",
+                    ),
+                ),
             ],
         ),
         migrations.AlterUniqueTogether(
-            name='emailtemplate',
-            unique_together=set([('name', 'language', 'version')]),
+            name="emailtemplate",
+            unique_together=set([("name", "language", "version")]),
         ),
     ]

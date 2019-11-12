@@ -2,7 +2,7 @@ import re
 from django.utils.safestring import mark_safe
 
 # regex for extracting django template {{ variable }}s
-TEMPLATE_VARS = re.compile(r'{{([ ._[a-z]*)}}')
+TEMPLATE_VARS = re.compile(r"{{([ ._[a-z]*)}}")
 
 
 def get_context(content):
@@ -29,7 +29,7 @@ def extract_vars(content):
     found in the content.
 
     """
-    content = content or ''
+    content = content or ""
     # if I was better at regex I wouldn't need the strip.
     return list(set([s.strip() for s in TEMPLATE_VARS.findall(content)]))
 
@@ -55,7 +55,7 @@ def expand_list(_list):
     tree = {}
     for item in _list:
         t = tree
-        for part in item.split('.'):
+        for part in item.split("."):
             t = t.setdefault(part, {})
     return tree
 
@@ -98,4 +98,3 @@ def patch_context(context, processors, request=None):
     """Add template context_processor content to context."""
     cpx = [p(request) for p in processors]
     return merge_dicts(context, *cpx)
-
