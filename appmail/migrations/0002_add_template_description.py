@@ -9,18 +9,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('appmail', '0001_initial'),
+        ("appmail", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='emailtemplate',
-            name='description',
-            field=models.CharField(blank=True, help_text="Optional description. e.g. used to differentiate variants ('new header').", max_length=100),
+            model_name="emailtemplate",
+            name="description",
+            field=models.CharField(
+                blank=True,
+                help_text="Optional description. e.g. used to differentiate variants ('new header').",
+                max_length=100,
+            ),
         ),
         migrations.AlterField(
-            model_name='emailtemplate',
-            name='language',
-            field=models.CharField(db_index=True, default=settings.LANGUAGE_CODE, help_text="Used to support localisation of emails, defaults to `settings.LANGUAGE_CODE`, but can be any string, e.g. 'London', 'NYC'.", max_length=20, verbose_name='Language'),
+            model_name="emailtemplate",
+            name="language",
+            field=models.CharField(
+                db_index=True,
+                default=settings.LANGUAGE_CODE,
+                help_text="Used to support localisation of emails, defaults to `settings.LANGUAGE_CODE`, but can be any string, e.g. 'London', 'NYC'.",
+                max_length=20,
+                verbose_name="Language",
+            ),
         ),
     ]

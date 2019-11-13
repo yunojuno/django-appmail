@@ -1,0 +1,12 @@
+*.gif
+*.html
+*.ico
+*.jpg
+*.jpeg
+*.svg
+*.json
+*.png
+*.yaml
+*.yml
+*.md
+vendor

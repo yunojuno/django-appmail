@@ -8,13 +8,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('appmail', '0003_emailtemplate_test_context'),
+        ("appmail", "0003_emailtemplate_test_context"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='emailtemplate',
-            name='is_active',
-            field=models.BooleanField(default=True, help_text='Set to False to remove from `current` queryset.', verbose_name='Active (live)'),
+            model_name="emailtemplate",
+            name="is_active",
+            field=models.BooleanField(
+                default=True,
+                help_text="Set to False to remove from `current` queryset.",
+                verbose_name="Active (live)",
+            ),
         ),
     ]
