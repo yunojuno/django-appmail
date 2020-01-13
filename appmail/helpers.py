@@ -1,10 +1,15 @@
+from __future__ import annotations
+
 import re
+from typing import Callable, Dict, Iterable, List, Optional
+
+from django.http import HttpRequest
 
 # regex for extracting django template {{ variable }}s
 TEMPLATE_VARS = re.compile(r"{{([ ._[a-z]*)}}")
 
 
-def get_context(content):
+def get_context(content: str) -> dict:
     """
     Return a dummary context dict for a content block.
 
@@ -20,7 +25,7 @@ def get_context(content):
     return fill_leaf_values(expand_list(extract_vars(content)))
 
 
-def extract_vars(content):
+def extract_vars(content: str) -> List[str]:
     """
     Extract variables from template content.
 
@@ -33,7 +38,7 @@ def extract_vars(content):
     return list(set([s.strip() for s in TEMPLATE_VARS.findall(content)]))
 
 
-def expand_list(_list):
+def expand_list(_list: List[str]) -> dict:
     """
     Convert list of '.' separated values to a nested dict.
 
@@ -50,8 +55,9 @@ def expand_list(_list):
         }
 
     """
-    assert isinstance(_list, list), "arg must be a list"
-    tree = {}
+    if not isinstance(_list, list):
+        raise ValueError("arg must be a list")
+    tree = {}  # type: Dict[str, dict]
     for item in _list:
         t = tree
         for part in item.split("."):
@@ -59,7 +65,7 @@ def expand_list(_list):
     return tree
 
 
-def fill_leaf_values(tree):
+def fill_leaf_values(tree: dict) -> dict:
     """
     Recursive function that populates empty dict leaf nodes.
 
@@ -76,7 +82,8 @@ def fill_leaf_values(tree):
         }
 
     """
-    assert isinstance(tree, dict), "arg must be a dictionary"
+    if not isinstance(tree, dict):
+        raise ValueError("arg must be a dictionary")
     for k in tree.keys():
         if tree[k] == {}:
             tree[k] = k.upper()
@@ -85,7 +92,7 @@ def fill_leaf_values(tree):
     return tree
 
 
-def merge_dicts(*dicts):
+def merge_dicts(*dicts: dict) -> dict:
     """Merge multiple dicts into one."""
     context = {}
     for d in dicts:
@@ -93,7 +100,11 @@ def merge_dicts(*dicts):
     return context
 
 
-def patch_context(context, processors, request=None):
+def patch_context(
+    context: dict,
+    processors: Iterable[Callable[[HttpRequest], dict]],
+    request: Optional[HttpRequest] = None,
+) -> dict:
     """Add template context_processor content to context."""
     cpx = [p(request) for p in processors]
     return merge_dicts(context, *cpx)

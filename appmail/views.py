@@ -1,13 +1,12 @@
-"""
-These views are intended for use in rendering email templates
-within the admin site, and supporting preview functionality.
-"""
+"""Views supporting template previews in admin site."""
+from __future__ import annotations
+
 import json
 import logging
 
 from django.conf import settings as django_settings
 from django.contrib.auth.decorators import user_passes_test
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.clickjacking import xframe_options_sameorigin
@@ -21,7 +20,7 @@ logger = logging.getLogger(__name__)
 
 @user_passes_test(lambda u: u.is_staff)
 @xframe_options_sameorigin
-def render_template_subject(request, template_id):
+def render_template_subject(request: HttpRequest, template_id: int) -> HttpResponse:
     """Render the template subject."""
     template = get_object_or_404(EmailTemplate, id=template_id)
     html = template.render_subject(template.test_context)
@@ -30,7 +29,9 @@ def render_template_subject(request, template_id):
 
 @user_passes_test(lambda u: u.is_staff)
 @xframe_options_sameorigin
-def render_template_body(request, template_id, content_type):
+def render_template_body(
+    request: HttpRequest, template_id: int, content_type: str
+) -> HttpResponse:
     """Render the template body as plain text or HTML."""
     template = get_object_or_404(EmailTemplate, id=template_id)
     if content_type in (
@@ -45,7 +46,7 @@ def render_template_body(request, template_id, content_type):
 
 
 @user_passes_test(lambda u: u.is_staff)
-def send_test_email(request):
+def send_test_email(request: HttpRequest) -> HttpResponseRedirect:
     """Intermediate admin action page for sending a single test email."""
     # use the field.to_python here as belt-and-braces - if it works here
     # we can be confident that it'll work on the POST.

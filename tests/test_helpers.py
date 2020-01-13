@@ -1,10 +1,8 @@
+from appmail import helpers
 from django.test import TestCase
-
-from .. import helpers
 
 
 class HelperTests(TestCase):
-
     """appmail.helpers module tests."""
 
     def test_get_context(self):
@@ -29,14 +27,14 @@ class HelperTests(TestCase):
 
     def test_expand_list(self):
         """Check dot notation expansion."""
-        self.assertRaises(AssertionError, helpers.expand_list, None)
-        self.assertRaises(AssertionError, helpers.expand_list, "")
+        self.assertRaises(ValueError, helpers.expand_list, None)
+        self.assertRaises(ValueError, helpers.expand_list, "")
         self.assertEqual(helpers.expand_list(["a", "b.c"]), {"a": {}, "b": {"c": {}}})
 
     def test_fill_leaf_values(self):
         """Check the default func is applied."""
-        self.assertRaises(AssertionError, helpers.fill_leaf_values, None)
-        self.assertRaises(AssertionError, helpers.fill_leaf_values, "")
+        self.assertRaises(ValueError, helpers.fill_leaf_values, None)
+        self.assertRaises(ValueError, helpers.fill_leaf_values, "")
         self.assertEqual(
             helpers.fill_leaf_values({"a": {}, "b": {"c": {}}}),
             {"a": "A", "b": {"c": "C"}},

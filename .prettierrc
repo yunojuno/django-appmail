@@ -7,15 +7,6 @@
     "trailingComma": "none",
     "bracketSpacing": true,
     "jsxBracketSameLine": false,
-    "parser": "babel",
     "proseWrap": "always",
-    "endOfLine":"auto",
-    "overrides": [
-        {
-          "files": "*.scss",
-          "options": {
-            "parser": "css"
-          }
-        }
-      ]
+    "endOfLine": "auto"
 }

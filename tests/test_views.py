@@ -1,12 +1,11 @@
 from unittest import mock
 
+from appmail import views
+from appmail.forms import EmailTestForm
+from appmail.models import EmailTemplate
 from django.contrib.auth.models import AnonymousUser, User
 from django.test import RequestFactory, TestCase
 from django.urls import reverse
-
-from .. import views
-from ..forms import EmailTestForm
-from ..models import EmailTemplate
 
 
 class ViewTests(TestCase):

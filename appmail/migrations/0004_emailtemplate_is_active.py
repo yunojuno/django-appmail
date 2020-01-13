@@ -7,9 +7,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("appmail", "0003_emailtemplate_test_context"),
-    ]
+    dependencies = [("appmail", "0003_emailtemplate_test_context")]
 
     operations = [
         migrations.AddField(
@@ -20,5 +18,5 @@ class Migration(migrations.Migration):
                 help_text="Set to False to remove from `current` queryset.",
                 verbose_name="Active (live)",
             ),
-        ),
+        )
     ]

@@ -1,37 +1,47 @@
+from __future__ import annotations
+
+from typing import Tuple
+
 from django.contrib import admin, messages
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
-from django.http import HttpResponseRedirect
+from django.db.models.query import QuerySet
+from django.http import HttpRequest, HttpResponseRedirect
 from django.urls import reverse
 from django.utils.html import format_html
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _lazy
 
 from .forms import JSONWidget
 from .models import EmailTemplate
 
 
 class ValidTemplateListFilter(admin.SimpleListFilter):
-
     """Filter on whether the template can be rendered or not."""
 
-    title = _("Is valid")
+    title = _lazy("Is valid")
     parameter_name = "valid"
 
-    def lookups(self, request, model_admin):
+    def lookups(
+        self, request: HttpRequest, model_admin: admin.ModelAdmin
+    ) -> Tuple[Tuple[str, str], Tuple[str, str]]:
         """
-        Returns a list of tuples. The first element in each
-        tuple is the coded value for the option that will
-        appear in the URL query. The second element is the
+        Return valid template True/False filter values tuples.
+
+        The first element in each tuple is the coded value for the option
+        that will appear in the URL query. The second element is the
         human-readable name for the option that will appear
         in the right sidebar.
-        """
-        return (("1", _("True")), ("0", _("False")))
 
-    def queryset(self, request, queryset):
         """
-        Returns the filtered queryset based on the value
-        provided in the query string and retrievable via
-        `self.value()`.
+        return (("1", _lazy("True")), ("0", _lazy("False")))
+
+    def queryset(self, request: HttpRequest, queryset: QuerySet) -> QuerySet:
+        """
+        Return the filtered queryset.
+
+        Filter based on the value provided in the query string and
+        retrievable via `self.value()`.
+
         """
         valid_ids = []
         invalid_ids = []
@@ -94,27 +104,27 @@ class EmailTemplateAdmin(admin.ModelAdmin):
         ),
     )
 
-    def _iframe(self, url):
+    def _iframe(self, url: str) -> str:
         return format_html(
-            "<iframe class='appmail' src='{}' onload='resizeIframe(this)'></iframe><br/>"
-            "<a href='{}' target='_blank'>View in new tab.</a>",
+            "<iframe class='appmail' src='{}' onload='resizeIframe(this)'></iframe>"
+            "<br/><a href='{}' target='_blank'>View in new tab.</a>",
             url,
             url,
         )
 
     # these functions are here rather than on the model so that we can get the
     # boolean icon.
-    def has_text(self, obj):
+    def has_text(self, obj: EmailTemplate) -> bool:
         return len(obj.body_text or "") > 0
 
-    has_text.boolean = True
+    has_text.boolean = True  # type: ignore
 
-    def has_html(self, obj):
+    def has_html(self, obj: EmailTemplate) -> bool:
         return len(obj.body_html or "") > 0
 
-    has_html.boolean = True
+    has_html.boolean = True  # type: ignore
 
-    def is_valid(self, obj):
+    def is_valid(self, obj: EmailTemplate) -> bool:
         """Return True if the template can be rendered."""
         try:
             obj.clean()
@@ -122,9 +132,9 @@ class EmailTemplateAdmin(admin.ModelAdmin):
         except ValidationError:
             return False
 
-    is_valid.boolean = True
+    is_valid.boolean = True  # type: ignore
 
-    def render_subject(self, obj):
+    def render_subject(self, obj: EmailTemplate) -> str:
         if obj.id is None:
             url = ""
         else:
@@ -133,10 +143,10 @@ class EmailTemplateAdmin(admin.ModelAdmin):
             )
         return self._iframe(url)
 
-    render_subject.short_description = "Rendered subject"
-    render_subject.allow_tags = True
+    render_subject.short_description = "Rendered subject"  # type: ignore
+    render_subject.allow_tags = True  # type: ignore
 
-    def render_text(self, obj):
+    def render_text(self, obj: EmailTemplate) -> str:
         if obj.id is None:
             url = ""
         else:
@@ -145,10 +155,10 @@ class EmailTemplateAdmin(admin.ModelAdmin):
             )
         return self._iframe(url)
 
-    render_text.short_description = "Rendered body (plain)"
-    render_text.allow_tags = True
+    render_text.short_description = "Rendered body (plain)"  # type: ignore
+    render_text.allow_tags = True  # type: ignore
 
-    def render_html(self, obj):
+    def render_html(self, obj: EmailTemplate) -> str:
         if obj.id is None:
             url = ""
         else:
@@ -157,45 +167,61 @@ class EmailTemplateAdmin(admin.ModelAdmin):
             )
         return self._iframe(url)
 
-    render_html.short_description = "Rendered body (html)"
-    render_html.allow_tags = True
+    render_html.short_description = "Rendered body (html)"  # type: ignore
+    render_html.allow_tags = True  # type: ignore
 
-    def send_test_emails(self, request, queryset):
+    def send_test_emails(
+        self, request: HttpRequest, queryset: QuerySet
+    ) -> HttpResponseRedirect:
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
         url = "{}?templates={}".format(
             reverse("appmail:send_test_email"), ",".join(selected)
         )
         return HttpResponseRedirect(url)
 
-    send_test_emails.short_description = _("Send test email for selected templates")
+    send_test_emails.short_description = _lazy(  # type: ignore
+        "Send test email for selected templates"
+    )
 
-    def clone_templates(self, request, queryset):
+    def clone_templates(
+        self, request: HttpRequest, queryset: QuerySet
+    ) -> HttpResponseRedirect:
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
         templates = EmailTemplate.objects.filter(pk__in=selected)
         for template in templates:
             template.clone()
-            messages.success(request, _("Cloned template '%s'" % template.name))
+            messages.success(request, _lazy("Cloned template '%s'" % template.name))
         return HttpResponseRedirect(request.path)
 
-    clone_templates.short_description = _("Clone selected email templates")
+    clone_templates.short_description = _lazy(  # type: ignore
+        "Clone selected email templates"
+    )
 
-    def activate_templates(self, request, queryset):
+    def activate_templates(
+        self, request: HttpRequest, queryset: QuerySet
+    ) -> HttpResponseRedirect:
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
         templates = EmailTemplate.objects.filter(pk__in=selected)
         count = templates.update(is_active=True)
-        messages.success(request, _("Activated %s templates" % count))
+        messages.success(request, _lazy("Activated %s templates" % count))
         return HttpResponseRedirect(request.path)
 
-    activate_templates.short_description = _("Activate selected email templates")
+    activate_templates.short_description = _lazy(  # type: ignore
+        "Activate selected email templates"
+    )
 
-    def deactivate_templates(self, request, queryset):
+    def deactivate_templates(
+        self, request: HttpRequest, queryset: QuerySet
+    ) -> HttpResponseRedirect:
         selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
         templates = EmailTemplate.objects.filter(pk__in=selected)
         count = templates.update(is_active=False)
-        messages.success(request, _("Deactivated %s templates" % count))
+        messages.success(request, _lazy("Deactivated %s templates" % count))
         return HttpResponseRedirect(request.path)
 
-    deactivate_templates.short_description = _("Deactivate selected email templates")
+    deactivate_templates.short_description = _lazy(  # type: ignore
+        "Deactivate selected email templates"
+    )
 
 
 admin.site.register(EmailTemplate, EmailTemplateAdmin)

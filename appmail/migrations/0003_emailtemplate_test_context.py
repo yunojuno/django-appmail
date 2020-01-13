@@ -8,9 +8,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("appmail", "0002_add_template_description"),
-    ]
+    dependencies = [("appmail", "0002_add_template_description")]
 
     operations = [
         migrations.AddField(
@@ -19,7 +17,10 @@ class Migration(migrations.Migration):
             field=django.contrib.postgres.fields.jsonb.JSONField(
                 default=dict,
                 blank=True,
-                help_text="Dummy JSON used for test rendering (set automatically on first save).",
+                help_text=(
+                    "Dummy JSON used for test rendering (set automatically on first "
+                    "save)."
+                ),
             ),
-        ),
+        )
     ]

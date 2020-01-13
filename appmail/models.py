@@ -1,23 +1,30 @@
+from __future__ import annotations
+
+from typing import Any, Callable, Dict, List
+
 from django.conf import settings
 from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
+from django.http import HttpRequest
 from django.template import Context, Template, TemplateDoesNotExist, TemplateSyntaxError
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _lazy
+from django.utils.translation import gettext as _
+from django.utils.translation import gettext_lazy as _lazy
 
 from . import helpers
 from .settings import ADD_EXTRA_HEADERS, CONTEXT_PROCESSORS, VALIDATE_ON_SAVE
 
 
 class EmailTemplateQuerySet(models.query.QuerySet):
-    def active(self):
-        """Returns active templates only."""
+    def active(self) -> EmailTemplateQuerySet:
+        """Return active templates only."""
         return self.filter(is_active=True)
 
-    def current(self, name, language=settings.LANGUAGE_CODE):
-        """Returns the latest version of a template."""
+    def current(
+        self, name: str, language: str = settings.LANGUAGE_CODE
+    ) -> EmailTemplateQuerySet:
+        """Return the latest version of a template."""
         return (
             self.active()
             .filter(name=name, language=language)
@@ -25,13 +32,14 @@ class EmailTemplateQuerySet(models.query.QuerySet):
             .last()
         )
 
-    def version(self, name, version, language=settings.LANGUAGE_CODE):
-        """Returns a specific version of a template."""
+    def version(
+        self, name: str, version: str, language: str = settings.LANGUAGE_CODE
+    ) -> EmailTemplate:
+        """Return a specific version of a template."""
         return self.active().get(name=name, language=language, version=version)
 
 
 class EmailTemplate(models.Model):
-
     """
     Email template. Contains HTML and plain text variants.
 
@@ -75,8 +83,8 @@ class EmailTemplate(models.Model):
         max_length=20,
         default=settings.LANGUAGE_CODE,
         help_text=_lazy(
-            "Used to support localisation of emails, defaults to `settings.LANGUAGE_CODE`, "
-            "but can be any string, e.g. 'London', 'NYC'."
+            "Used to support localisation of emails, defaults to "
+            "`settings.LANGUAGE_CODE`, but can be any string, e.g. 'London', 'NYC'."
         ),
         db_index=True,
     )
@@ -136,17 +144,17 @@ class EmailTemplate(models.Model):
     class Meta:
         unique_together = ("name", "language", "version")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "'{}' ({})".format(self.name, self.language)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"<EmailTemplate id={self.id} name='{self.name}' "
             f"language='{self.language}' version={self.version}>"
         )
 
     @property
-    def extra_headers(self):
+    def extra_headers(self) -> Dict[str, str]:
         return {
             "X-Appmail-Template": (
                 f"name={self.name}; language={self.language}; version={self.version}"
@@ -154,12 +162,13 @@ class EmailTemplate(models.Model):
         }
 
     @property
-    def reply_to_list(self):
+    def reply_to_list(self) -> List[str]:
         """Convert the reply_to field to a list."""
         return [a.strip() for a in self.reply_to.split(",")]
 
-    def save(self, *args, **kwargs):
-        """Update dummy context on first save and validate template contents.
+    def save(self, *args: Any, **kwargs: Any) -> EmailTemplate:
+        """
+        Update dummy context on first save and validate template contents.
 
         Kwargs:
             validate: set to False to bypass template validation; defaults
@@ -176,7 +185,7 @@ class EmailTemplate(models.Model):
         super(EmailTemplate, self).save(*args, **kwargs)
         return self
 
-    def clean(self):
+    def clean(self) -> None:
         """Validate model - specifically that the template can be rendered."""
         validation_errors = {}
         validation_errors.update(self._validate_body(EmailTemplate.CONTENT_TYPE_PLAIN))
@@ -185,12 +194,16 @@ class EmailTemplate(models.Model):
         if validation_errors:
             raise ValidationError(validation_errors)
 
-    def render_subject(self, context, processors=CONTEXT_PROCESSORS):
+    def render_subject(
+        self,
+        context: dict,
+        processors: List[Callable[[HttpRequest], dict]] = CONTEXT_PROCESSORS,
+    ) -> str:
         """Render subject line."""
         ctx = Context(helpers.patch_context(context, processors), autoescape=False)
         return Template(self.subject).render(ctx)
 
-    def _validate_subject(self):
+    def _validate_subject(self) -> Dict[str, str]:
         """Try rendering the body template and capture any errors."""
         try:
             self.render_subject({})
@@ -202,20 +215,23 @@ class EmailTemplate(models.Model):
             return {}
 
     def render_body(
-        self, context, content_type=CONTENT_TYPE_PLAIN, processors=CONTEXT_PROCESSORS
-    ):
+        self,
+        context: dict,
+        content_type: str = CONTENT_TYPE_PLAIN,
+        processors: List[Callable[[HttpRequest], dict]] = CONTEXT_PROCESSORS,
+    ) -> str:
         """Render email body in plain text or HTML format."""
-        assert content_type in EmailTemplate.CONTENT_TYPES, _lazy(
-            "Invalid content type."
-        )
+        if content_type not in EmailTemplate.CONTENT_TYPES:
+            raise ValueError(_(f"Invalid content type. Value supplied: {content_type}"))
         if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
             ctx = Context(helpers.patch_context(context, processors), autoescape=False)
             return Template(self.body_text).render(ctx)
         if content_type == EmailTemplate.CONTENT_TYPE_HTML:
             ctx = Context(helpers.patch_context(context, processors))
             return Template(self.body_html).render(ctx)
+        raise ValueError(f"Invalid content_type '{content_type}'.")
 
-    def _validate_body(self, content_type):
+    def _validate_body(self, content_type: str) -> Dict[str, str]:
         """Try rendering the body template and capture any errors."""
         if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
             field_name = "body_text"
@@ -232,7 +248,9 @@ class EmailTemplate(models.Model):
         else:
             return {}
 
-    def create_message(self, context, **email_kwargs):
+    def create_message(
+        self, context: dict, **email_kwargs: Any
+    ) -> EmailMultiAlternatives:
         """
         Return populated EmailMultiAlternatives object.
 
@@ -278,7 +296,7 @@ class EmailTemplate(models.Model):
             **email_kwargs,
         )
 
-    def clone(self):
+    def clone(self) -> EmailTemplate:
         """Create a copy of the current object, increase version by 1."""
         self.pk = None
         self.version += 1
