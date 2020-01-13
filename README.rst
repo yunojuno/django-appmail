@@ -7,12 +7,13 @@
 Django-AppMail
 --------------
 
-Django app for managing transactional email templates
+Django app for managing transactional email templates.
 
 Compatibility
 =============
 
-This project now requires Django1.11+ and Python3. If you require python2 support you will have to refer to the python2 branch.
+This project now requires Django2.2+ and Python3.7+. If you require a previous
+version you will have to refer to the relevant branch or tag.
 
 Background
 ==========
