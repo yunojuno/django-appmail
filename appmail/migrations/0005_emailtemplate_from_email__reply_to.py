@@ -8,9 +8,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("appmail", "0004_emailtemplate_is_active"),
-    ]
+    dependencies = [("appmail", "0004_emailtemplate_is_active")]
 
     operations = [
         migrations.AddField(
@@ -18,7 +16,10 @@ class Migration(migrations.Migration):
             name="from_email",
             field=models.CharField(
                 default=settings.DEFAULT_FROM_EMAIL,
-                help_text="Default sender address if none specified. Verbose form is accepted.",
+                help_text=(
+                    "Default sender address if none specified. Verbose form is "
+                    "accepted."
+                ),
                 max_length=254,
                 verbose_name="Sender",
             ),
@@ -38,7 +39,10 @@ class Migration(migrations.Migration):
             name="description",
             field=models.CharField(
                 blank=True,
-                help_text="Optional description. e.g. used to differentiate variants ('new header').",
+                help_text=(
+                    "Optional description. e.g. used to differentiate variants ('new "
+                    "header')."
+                ),
                 max_length=100,
                 verbose_name="Description",
             ),

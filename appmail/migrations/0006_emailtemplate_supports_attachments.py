@@ -5,9 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ("appmail", "0005_emailtemplate_from_email__reply_to"),
-    ]
+    dependencies = [("appmail", "0005_emailtemplate_from_email__reply_to")]
 
     operations = [
         migrations.AddField(
@@ -18,5 +16,5 @@ class Migration(migrations.Migration):
                 help_text="Does this template support file attachments?",
                 verbose_name="Supports attachments",
             ),
-        ),
+        )
     ]

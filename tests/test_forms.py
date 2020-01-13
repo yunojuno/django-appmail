@@ -1,13 +1,18 @@
+# type: ignore
 from unittest import mock
 
+from appmail.forms import (
+    EmailTestForm,
+    JSONWidget,
+    MultiEmailField,
+    MultiEmailTemplateField,
+)
+from appmail.models import EmailTemplate
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.forms import Textarea
 from django.http import HttpRequest
 from django.test import TestCase
-
-from ..forms import EmailTestForm, JSONWidget, MultiEmailField, MultiEmailTemplateField
-from ..models import EmailTemplate
 
 
 class JSONWidgetTests(TestCase):

@@ -1,17 +1,15 @@
 from email.mime.image import MIMEImage
 from unittest import mock
 
+from appmail.models import EmailTemplate
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.test import TestCase
 
-from ..models import EmailTemplate
-
 
 class EmailTemplateQuerySetTests(TestCase):
-
     """appmail.models.EmailTemplateQuerySet model tests."""
 
     def test_active(self):
@@ -39,7 +37,6 @@ class EmailTemplateQuerySetTests(TestCase):
 
 
 class EmailTemplateTests(TestCase):
-
     """appmail.models.EmailTemplate model tests."""
 
     def test_defaults(self):
@@ -134,9 +131,7 @@ class EmailTemplateTests(TestCase):
             template.render_body(context, content_type=EmailTemplate.CONTENT_TYPE_HTML),
             "<h1>Hello fråd</h1>",
         )
-        self.assertRaises(
-            AssertionError, template.render_body, context, content_type="foo"
-        )
+        self.assertRaises(ValueError, template.render_body, context, content_type="foo")
 
     def test_create_message(self):
         template = EmailTemplate(
