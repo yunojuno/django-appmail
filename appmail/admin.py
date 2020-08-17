@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Tuple
 
 from django.contrib import admin, messages
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponseRedirect
@@ -11,6 +10,7 @@ from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _lazy
 
+from .compat import JSONField
 from .forms import JSONWidget
 from .models import EmailTemplate
 

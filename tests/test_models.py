@@ -1,12 +1,13 @@
 from email.mime.image import MIMEImage
 from unittest import mock
 
-from appmail.models import EmailTemplate
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.test import TestCase
+
+from appmail.models import EmailTemplate
 
 
 class EmailTemplateQuerySetTests(TestCase):
