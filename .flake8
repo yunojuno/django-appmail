@@ -1,6 +1,14 @@
 [flake8]
 max-line-length = 88
 max-complexity = 8
+exclude =
+  .venv,
+  .git,
+  .coverage,
+  build,
+  dist,
+  _pycache__
+
 # http://flake8.pycqa.org/en/2.5.5/warnings.html#warning-error-codes
 ignore =
   # pydocstyle - docstring conventions (PEP257)

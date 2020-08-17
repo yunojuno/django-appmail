@@ -1,5 +1,6 @@
-from appmail import helpers
 from django.test import TestCase
+
+from appmail import helpers
 
 
 class HelperTests(TestCase):

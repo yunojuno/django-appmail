@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any, Callable, Dict, List
 
 from django.conf import settings
-from django.contrib.postgres.fields import JSONField
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.db import models
@@ -13,6 +12,7 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _lazy
 
 from . import helpers
+from .compat import JSONField
 from .settings import ADD_EXTRA_HEADERS, CONTEXT_PROCESSORS, VALIDATE_ON_SAVE
 
 
@@ -238,7 +238,7 @@ class EmailTemplate(models.Model):
         elif content_type == EmailTemplate.CONTENT_TYPE_HTML:
             field_name = "body_html"
         else:
-            raise ValueError(f"Invalid template content_type.")
+            raise ValueError("Invalid template content_type.")
         try:
             self.render_body({}, content_type=content_type)
         except TemplateDoesNotExist as ex:
