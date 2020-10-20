@@ -6,7 +6,10 @@ try:
     from django.db.models import JSONField  # noqa: F401
 
     DATABASES = {
-        "default": {"ENGINE": "django.db.backends.sqlite3", "NAME": "test.db",}
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": "test.db",
+        }
     }
 except ImportError:
     DATABASES = {
@@ -54,6 +57,7 @@ TEMPLATES = [
                 "django.template.context_processors.debug",
                 "django.template.context_processors.i18n",
                 "django.template.context_processors.media",
+                "django.template.context_processors.request",
                 "django.template.context_processors.static",
                 "django.template.context_processors.tz",
                 "django.contrib.messages.context_processors.messages",

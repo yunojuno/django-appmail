@@ -173,10 +173,8 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     def send_test_emails(
         self, request: HttpRequest, queryset: QuerySet
     ) -> HttpResponseRedirect:
-        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
-        url = "{}?templates={}".format(
-            reverse("appmail:send_test_email"), ",".join(selected)
-        )
+        selected = ",".join([str(s) for s in queryset.values_list("id", flat=True)])
+        url = "{}?templates={}".format(reverse("appmail:send_test_email"), selected)
         return HttpResponseRedirect(url)
 
     send_test_emails.short_description = _lazy(  # type: ignore
@@ -186,9 +184,7 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     def clone_templates(
         self, request: HttpRequest, queryset: QuerySet
     ) -> HttpResponseRedirect:
-        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
-        templates = EmailTemplate.objects.filter(pk__in=selected)
-        for template in templates:
+        for template in queryset:
             template.clone()
             messages.success(request, _lazy("Cloned template '%s'" % template.name))
         return HttpResponseRedirect(request.path)
@@ -200,9 +196,7 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     def activate_templates(
         self, request: HttpRequest, queryset: QuerySet
     ) -> HttpResponseRedirect:
-        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
-        templates = EmailTemplate.objects.filter(pk__in=selected)
-        count = templates.update(is_active=True)
+        count = queryset.update(is_active=True)
         messages.success(request, _lazy("Activated %s templates" % count))
         return HttpResponseRedirect(request.path)
 
@@ -213,9 +207,7 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     def deactivate_templates(
         self, request: HttpRequest, queryset: QuerySet
     ) -> HttpResponseRedirect:
-        selected = request.POST.getlist(admin.ACTION_CHECKBOX_NAME)
-        templates = EmailTemplate.objects.filter(pk__in=selected)
-        count = templates.update(is_active=False)
+        count = queryset.update(is_active=False)
         messages.success(request, _lazy("Deactivated %s templates" % count))
         return HttpResponseRedirect(request.path)
 
