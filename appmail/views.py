@@ -8,6 +8,7 @@ from django.conf import settings as django_settings
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
+from django.http.response import HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils.translation import gettext as _
@@ -120,6 +121,4 @@ def render_message_body(
         return HttpResponse(email.body, content_type=content_type)
     if content_type == EmailTemplate.CONTENT_TYPE_HTML:
         return HttpResponse(email.html, content_type=content_type)
-    # do not return the content_type to the user, as it is
-    # user-generated and _could_ be a vulnerability.
-    return HttpResponse("Invalid content_type specified.", status=400)
+    return HttpResponseBadRequest("Invalid content_type specified.")
