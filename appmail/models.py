@@ -1,19 +1,26 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
-from django.db import models
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models, transaction
 from django.http import HttpRequest
 from django.template import Context, Template, TemplateDoesNotExist, TemplateSyntaxError
+from django.utils.timezone import now as tz_now
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _lazy
 
 from . import helpers
 from .compat import JSONField
-from .settings import ADD_EXTRA_HEADERS, CONTEXT_PROCESSORS, VALIDATE_ON_SAVE
+from .settings import (
+    ADD_EXTRA_HEADERS,
+    CONTEXT_PROCESSORS,
+    LOG_SENT_EMAILS,
+    VALIDATE_ON_SAVE,
+)
 
 
 class EmailTemplateQuerySet(models.query.QuerySet):
@@ -250,9 +257,9 @@ class EmailTemplate(models.Model):
 
     def create_message(
         self, context: dict, **email_kwargs: Any
-    ) -> EmailMultiAlternatives:
+    ) -> AppmailMultiAlternatives:
         """
-        Return populated EmailMultiAlternatives object.
+        Return populated AppmailMultiAlternatives object.
 
         This function is a helper that will render the template subject and
         plain text / html content, as well as populating all of the standard
@@ -279,9 +286,6 @@ class EmailTemplate(models.Model):
         if email_kwargs.get("attachments", None) and not self.supports_attachments:
             raise ValueError(_("Email template does not support attachments."))
 
-        subject = self.render_subject(context)
-        body = self.render_body(context, content_type=EmailTemplate.CONTENT_TYPE_PLAIN)
-        html = self.render_body(context, content_type=EmailTemplate.CONTENT_TYPE_HTML)
         email_kwargs["reply_to"] = email_kwargs.get("reply_to") or self.reply_to_list
         email_kwargs["from_email"] = email_kwargs.get("from_email") or self.from_email
         if ADD_EXTRA_HEADERS:
@@ -289,15 +293,147 @@ class EmailTemplate(models.Model):
             email_kwargs["headers"].update(self.extra_headers)
         # alternatives is a list of (content, mimetype) tuples
         # https://github.com/django/django/blob/master/django/core/mail/message.py#L435
-        return EmailMultiAlternatives(
-            subject=subject,
-            body=body,
-            alternatives=[(html, EmailTemplate.CONTENT_TYPE_HTML)],
-            **email_kwargs,
-        )
+        return AppmailMultiAlternatives(template=self, context=context, **email_kwargs)
 
     def clone(self) -> EmailTemplate:
         """Create a copy of the current object, increase version by 1."""
         self.pk = None
         self.version += 1
         return self.save()
+
+
+class AppmailMultiAlternatives(EmailMultiAlternatives):
+    """
+    Subclass EmailMultiAlternatives to override send method.
+
+    This class is used to generate an EmailMultiAlternatives object
+    that has values derived from an EmailTemplate. Underneath it is
+    just a standard EmailMultiAlternatives message.
+
+    The initialiser is overridden to take the template and context,
+    from which the subject, body, html are derived.
+
+    The send method is overridden to enable the saving of the message
+    as sent.
+
+    """
+
+    def __init__(
+        self,
+        *,
+        template: EmailTemplate,
+        context: dict,
+        user: Optional[settings.AUTH_USER_MODEL] = None,
+        **email_kwargs: Any,
+    ):
+        self.template = template
+        self.context = context
+        self.user = user
+        email_kwargs["subject"] = self.template.render_subject(context)
+        email_kwargs["body"] = self.template.render_body(
+            context, content_type=EmailTemplate.CONTENT_TYPE_PLAIN
+        )
+        self.html = self.template.render_body(
+            context, content_type=EmailTemplate.CONTENT_TYPE_HTML
+        )
+        email_kwargs["alternatives"] = [(self.html, EmailTemplate.CONTENT_TYPE_HTML)]
+        super().__init__(**email_kwargs)
+
+    @transaction.atomic
+    def send(
+        self,
+        log_sent_emails: bool = LOG_SENT_EMAILS,
+        fail_silently: bool = False,
+    ) -> int:
+        """Send the email and add to audit log."""
+        sent = super().send(fail_silently=fail_silently)
+        if not log_sent_emails:
+            return sent
+        for recipient_email in self.to:
+            LoggedMessage.objects.create(
+                template=self.template,
+                to=recipient_email,
+                user=self.user,
+                subject=self.subject,
+                body=self.body,
+                html=self.html,
+                context=self.context,
+            )
+        return sent
+
+
+class LoggedMessage(models.Model):
+    """Record of emails sent via Appmail."""
+
+    # nullable, as sometimes we may have unknown senders / recipients?
+    to = models.EmailField(help_text=_lazy("Address to which the the Email was sent."))
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        related_name="logged_emails",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        db_index=True,
+    )
+    template: EmailTemplate = models.ForeignKey(
+        EmailTemplate,
+        related_name="logged_emails",
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text=_lazy("The appmail template used."),
+    )
+    timestamp = models.DateTimeField(
+        default=tz_now, help_text=_lazy("When the email was sent.")
+    )
+    subject = models.TextField(blank=True, help_text=_lazy("Email subject line."))
+    body = models.TextField(blank=True, help_text=_lazy("Plain text content."))
+    html = models.TextField(blank=True, help_text=_lazy("HTML content."))
+    context = JSONField(
+        default=dict,
+        encoder=DjangoJSONEncoder,
+        help_text=_lazy("Appmail template context."),
+    )
+
+    class Meta:
+        get_latest_by = "timestamp"
+
+    def __repr__(self) -> str:
+        return (
+            f"<LoggedEmail id:{self.id} template='{self.template_name}' to='{self.to}'>"
+        )
+
+    def __str__(self) -> str:
+        return f"LoggedEmail sent to {self.to} ['{self.template_name}']>"
+
+    @property
+    def template_name(self) -> str:
+        """Return the name of the template used."""
+        if not self.template:
+            return ""
+        return self.template.name
+
+    def save(self, *args: Any, **kwargs: Any) -> LoggedMessage:
+        super().save(*args, **kwargs)
+        return self
+
+    def as_email(self) -> AppmailMultiAlternatives:
+        """Create a new AppmailMultiAlternatives message from this email."""
+        return AppmailMultiAlternatives(
+            template=self.template, context=self.context, user=self.user, to=[self.to]
+        )
+
+    def resend(
+        self,
+        log_sent_emails: bool = LOG_SENT_EMAILS,
+        fail_silently: bool = False,
+    ) -> None:
+        """
+        Resend the same email.
+
+        This method recreates a new AppmailMultiAlternatives object and sends it.
+        """
+        self.as_email().send(
+            log_sent_emails=log_sent_emails, fail_silently=fail_silently
+        )

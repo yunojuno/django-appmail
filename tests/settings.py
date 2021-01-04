@@ -1,5 +1,7 @@
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+
 DEBUG = True
 
 try:
@@ -74,7 +76,7 @@ STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "static"))
 
-SECRET_KEY = "top secret"
+SECRET_KEY = "top secret"  # noqa: S105
 
 ROOT_URLCONF = "tests.urls"
 
@@ -82,6 +84,7 @@ APPEND_SLASH = True
 
 STATIC_URL = "/static/"
 
-assert DEBUG is True, "This project is only intended to be used for testing."
+if not DEBUG:
+    raise ImproperlyConfigured("This project is only intended to be used for testing.")
 
 APPMAIL_DEFAULT_SENDER = "test@example.com"

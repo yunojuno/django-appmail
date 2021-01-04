@@ -11,20 +11,16 @@ from appmail.models import EmailTemplate
 
 
 class EmailTemplateQuerySetTests(TestCase):
-    """appmail.models.EmailTemplateQuerySet model tests."""
-
     def test_active(self):
         template1 = EmailTemplate(name="test1", language="en-us").save()
-        template2 = EmailTemplate(
-            name="test2", language="en-us", is_active=False
-        ).save()
+        _ = EmailTemplate(name="test2", language="en-us", is_active=False).save()
         self.assertEqual(EmailTemplate.objects.active().get(), template1)
 
     def test_current(self):
         # manually setting the version in the wrong order, so the first
         # template is actually the last, when ordered by version.
         template1 = EmailTemplate(name="test", language="en-us", version=1).save()
-        template2 = EmailTemplate(name="test", language="en-us", version=0).save()
+        _ = EmailTemplate(name="test", language="en-us", version=0).save()
         self.assertEqual(EmailTemplate.objects.current("test"), template1)
         self.assertEqual(
             EmailTemplate.objects.current("test", language="klingon"), None
@@ -224,7 +220,10 @@ class EmailTemplateTests(TestCase):
         template = EmailTemplate(
             subject="Hello {{ user.first_name }} and welcome to {{ company_name }}",
             body_text="Hello {{ user.first_name }} and welcome to {{ company_name }}",
-            body_html="<h1>Hello {{ user.first_name }}</h1></br><p>Welcome to {{ company_name }}</p>",
+            body_html=(
+                "<h1>Hello {{ user.first_name }}</h1></br><p>"
+                "Welcome to {{ company_name }}</p>"
+            ),
         )
 
         context = {
@@ -243,7 +242,8 @@ class EmailTemplateTests(TestCase):
             message.alternatives,
             [
                 (
-                    "<h1>Hello Test &amp; Company</h1></br><p>Welcome to Me &amp; Co Inc</p>",
+                    "<h1>Hello Test &amp; Company</h1></br><p>"
+                    "Welcome to Me &amp; Co Inc</p>",
                     EmailTemplate.CONTENT_TYPE_HTML,
                 )
             ],

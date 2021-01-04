@@ -10,3 +10,6 @@ ADD_EXTRA_HEADERS = getattr(settings, "APPMAIL_ADD_HEADERS", True)
 CONTEXT_PROCESSORS = [
     import_string(s) for s in getattr(settings, "APPMAIL_CONTEXT_PROCESSORS", [])
 ]  # noqa
+
+# If True then emails will be logged.
+LOG_SENT_EMAILS = getattr(settings, "APPMAIL_LOG_SENT_EMAILS", True)

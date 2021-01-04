@@ -5,8 +5,10 @@ exclude =
   .venv,
   .git,
   .coverage,
+  .tox,
   build,
   dist,
+  htmlcov,
   _pycache__
 
 # http://flake8.pycqa.org/en/2.5.5/warnings.html#warning-error-codes

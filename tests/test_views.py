@@ -10,9 +10,6 @@ from appmail.models import EmailTemplate
 
 
 class ViewTests(TestCase):
-
-    """appmail.helpers module tests."""
-
     def setUp(self):
         # Every test needs access to the request factory.
         self.factory = RequestFactory()
@@ -101,7 +98,9 @@ class ViewTests(TestCase):
         )
 
     def test_send_test_emails_GET(self):
-        user = User.objects.create(username="admin", password="password", is_staff=True)
+        user = User.objects.create(  # noqa: S106, E501
+            username="admin", password="password", is_staff=True
+        )
         template = self.template
         url = "{}?templates={}".format(reverse("appmail:send_test_email"), template.pk)
         response = self.client.get(url)
@@ -113,7 +112,9 @@ class ViewTests(TestCase):
 
     @mock.patch.object(EmailTestForm, "send_emails")
     def test_send_test_emails_POST(self, mock_send):
-        user = User.objects.create(username="admin", password="password", is_staff=True)
+        user = User.objects.create(  # noqa: S106, E501
+            username="admin", password="password", is_staff=True
+        )
         template = self.template
         url = "{}?templates={}".format(reverse("appmail:send_test_email"), template.pk)
         self.client.force_login(user)

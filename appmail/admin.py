@@ -1,18 +1,20 @@
 from __future__ import annotations
 
-from typing import Tuple
+from typing import Any, List, Optional, Tuple
 
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
+from django.db.models.fields import Field
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponseRedirect
+from django.template.defaultfilters import truncatechars
 from django.urls import reverse
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _lazy
 
 from .compat import JSONField
 from .forms import JSONWidget
-from .models import EmailTemplate
+from .models import EmailTemplate, LoggedMessage
 
 
 class ValidTemplateListFilter(admin.SimpleListFilter):
@@ -58,6 +60,7 @@ class ValidTemplateListFilter(admin.SimpleListFilter):
             return queryset.filter(pk__in=invalid_ids)
 
 
+@admin.register(EmailTemplate)
 class EmailTemplateAdmin(admin.ModelAdmin):
 
     formfield_overrides = {JSONField: {"widget": JSONWidget}}
@@ -216,4 +219,31 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(EmailTemplate, EmailTemplateAdmin)
+@admin.register(LoggedMessage)
+class LoggedMessageAdmin(admin.ModelAdmin):
+    list_display = ("to", "template", "_subject", "timestamp")
+    raw_id_fields = ("user", "template")
+    search_fields = ("to", "subject")
+    list_filter = ("template",)
+    readonly_fields = (
+        "to",
+        "user",
+        "template",
+        "subject",
+        "body",
+        "html",
+        "timestamp",
+    )
+
+    def _subject(self, obj: LoggedMessage) -> str:
+        """Truncate the subject for display."""
+        return truncatechars(obj.subject, 50)
+
+    def get_fields(
+        self, request: HttpRequest, obj: Optional[LoggedMessage] = None, **kwargs: Any
+    ) -> List[Field]:
+        """Override get_fields to put editable context at the bottom."""
+        fields = super().get_fields(request, obj, **kwargs)
+        fields.remove("context")
+        fields.append("context")  # can also use insert
+        return fields

@@ -13,7 +13,7 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from .forms import EmailTestForm, MultiEmailTemplateField
 from .helpers import merge_dicts
-from .models import EmailTemplate
+from .models import EmailTemplate, LoggedMessage
 
 logger = logging.getLogger(__name__)
 
@@ -96,3 +96,11 @@ def send_test_email(request: HttpRequest) -> HttpResponseRedirect:
                 },
                 status=422,
             )
+
+
+@user_passes_test(lambda u: u.is_staff)
+def resend_email(request: HttpRequest, email_id: int) -> HttpResponseRedirect:
+    """Resend a specific LoggedMessage."""
+    email = LoggedMessage.objects.get(id=email_id)
+    email.resend()
+    return HttpResponseRedirect(reverse("admin:appmail_loggedmessage_changelist"))
