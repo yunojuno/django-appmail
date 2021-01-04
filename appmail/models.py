@@ -385,7 +385,7 @@ class LoggedMessage(models.Model):
         help_text=_lazy("The appmail template used."),
     )
     timestamp = models.DateTimeField(
-        default=tz_now, help_text=_lazy("When the email was sent.")
+        default=tz_now, help_text=_lazy("When the email was sent."), db_index=True
     )
     subject = models.TextField(blank=True, help_text=_lazy("Email subject line."))
     body = models.TextField(blank=True, help_text=_lazy("Plain text content."))

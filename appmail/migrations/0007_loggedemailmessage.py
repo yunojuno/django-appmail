@@ -41,6 +41,7 @@ class Migration(migrations.Migration):
                     models.DateTimeField(
                         default=django.utils.timezone.now,
                         help_text="When the email was sent.",
+                        db_index=True,
                     ),
                 ),
                 (
