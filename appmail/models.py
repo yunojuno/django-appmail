@@ -306,15 +306,15 @@ class AppmailMultiAlternatives(EmailMultiAlternatives):
     """
     Subclass EmailMultiAlternatives to override send method.
 
-    This class is used to generate an EmailMultiAlternatives object
-    that has values derived from an EmailTemplate. Underneath it is
+    This class is used to generate an EmailMultiAlternatives-compatible
+    object that has values derived from an EmailTemplate. Underneath it is
     just a standard EmailMultiAlternatives message.
 
-    The initialiser is overridden to take the template and context,
-    from which the subject, body, html are derived.
+    The initialiser takes the EmailTemplate and context, from which the
+    the subject, body, html are derived.
 
     The send method is overridden to enable the saving of the message
-    as sent.
+    as sent. (if LOG_SENT_EMAILS=True).
 
     """
 
