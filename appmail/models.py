@@ -152,7 +152,7 @@ class EmailTemplate(models.Model):
         unique_together = ("name", "language", "version")
 
     def __str__(self) -> str:
-        return "'{}' ({})".format(self.name, self.language)
+        return f"{self.name} (language={self.language}; version={self.version})"
 
     def __repr__(self) -> str:
         return (
@@ -306,15 +306,15 @@ class AppmailMultiAlternatives(EmailMultiAlternatives):
     """
     Subclass EmailMultiAlternatives to override send method.
 
-    This class is used to generate an EmailMultiAlternatives object
-    that has values derived from an EmailTemplate. Underneath it is
+    This class is used to generate an EmailMultiAlternatives-compatible
+    object that has values derived from an EmailTemplate. Underneath it is
     just a standard EmailMultiAlternatives message.
 
-    The initialiser is overridden to take the template and context,
-    from which the subject, body, html are derived.
+    The initialiser takes the EmailTemplate and context, from which the
+    the subject, body, html are derived.
 
     The send method is overridden to enable the saving of the message
-    as sent.
+    as sent. (if LOG_SENT_EMAILS=True).
 
     """
 
@@ -326,6 +326,19 @@ class AppmailMultiAlternatives(EmailMultiAlternatives):
         user: Optional[settings.AUTH_USER_MODEL] = None,
         **email_kwargs: Any,
     ):
+        """
+        Build new AppmailMultiAlternatives objects from EmailTemplate.
+
+        The template and context are used to render the email subject line,
+        body and HTML.
+
+        The `email_kwargs` are passed direct to the EmailMultiAlternatives
+        constructor - so can be anything that that supports (cc, bcc, etc.)
+
+        The user object is stored on this object as a property, and is just
+        a shorthand to enable logging of the message when it is sent.
+
+        """
         self.template = template
         self.context = context
         self.user = user
@@ -345,10 +358,21 @@ class AppmailMultiAlternatives(EmailMultiAlternatives):
         log_sent_emails: bool = LOG_SENT_EMAILS,
         fail_silently: bool = False,
     ) -> int:
-        """Send the email and add to audit log."""
+        """
+        Send the email and add to audit log.
+
+        This method first sends the email using the underlying
+        send method. If any messages are sent (return value > 0),
+        then the message is logged as a LoggedMessage record.
+
+        """
         sent = super().send(fail_silently=fail_silently)
         if not log_sent_emails:
             return sent
+        if not sent:
+            return 0
+        # NB it is expected that there will only be a single recipient,
+        # however the `EmailMessage.to` property is a list, so we iterate.
         for recipient_email in self.to:
             LoggedMessage.objects.create(
                 template=self.template,
@@ -365,8 +389,9 @@ class AppmailMultiAlternatives(EmailMultiAlternatives):
 class LoggedMessage(models.Model):
     """Record of emails sent via Appmail."""
 
-    # nullable, as sometimes we may have unknown senders / recipients?
+    # ensure we record the email address itself, even if we don't have a User object
     to = models.EmailField(help_text=_lazy("Address to which the the Email was sent."))
+    # nullable, as sometimes we may have unknown senders / recipients?
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         related_name="logged_emails",
@@ -388,8 +413,10 @@ class LoggedMessage(models.Model):
         default=tz_now, help_text=_lazy("When the email was sent."), db_index=True
     )
     subject = models.TextField(blank=True, help_text=_lazy("Email subject line."))
-    body = models.TextField(blank=True, help_text=_lazy("Plain text content."))
-    html = models.TextField(blank=True, help_text=_lazy("HTML content."))
+    body = models.TextField(
+        "Plain text", blank=True, help_text=_lazy("Plain text content.")
+    )
+    html = models.TextField("HTML", blank=True, help_text=_lazy("HTML content."))
     context = JSONField(
         default=dict,
         encoder=DjangoJSONEncoder,
@@ -398,14 +425,17 @@ class LoggedMessage(models.Model):
 
     class Meta:
         get_latest_by = "timestamp"
+        verbose_name = "Email message"
+        verbose_name_plural = "Email messages sent"
 
     def __repr__(self) -> str:
         return (
-            f"<LoggedEmail id:{self.id} template='{self.template_name}' to='{self.to}'>"
+            f"<LoggedMessage id:{self.id} template='{self.template_name}' "
+            f"to='{self.to}'>"
         )
 
     def __str__(self) -> str:
-        return f"LoggedEmail sent to {self.to} ['{self.template_name}']>"
+        return f"LoggedMessage sent to {self.to} ['{self.template_name}']>"
 
     @property
     def template_name(self) -> str:
@@ -418,7 +448,7 @@ class LoggedMessage(models.Model):
         super().save(*args, **kwargs)
         return self
 
-    def as_email(self) -> AppmailMultiAlternatives:
+    def as_message_object(self) -> AppmailMultiAlternatives:
         """Create a new AppmailMultiAlternatives message from this email."""
         return AppmailMultiAlternatives(
             template=self.template, context=self.context, user=self.user, to=[self.to]
@@ -434,6 +464,6 @@ class LoggedMessage(models.Model):
 
         This method recreates a new AppmailMultiAlternatives object and sends it.
         """
-        self.as_email().send(
+        self.as_message_object().send(
             log_sent_emails=log_sent_emails, fail_silently=fail_silently
         )
