@@ -48,8 +48,20 @@ class Migration(migrations.Migration):
                     "subject",
                     models.TextField(blank=True, help_text="Email subject line."),
                 ),
-                ("body", models.TextField(blank=True, help_text="Plain text content.")),
-                ("html", models.TextField(blank=True, help_text="HTML content.")),
+                (
+                    "body",
+                    models.TextField(
+                        blank=True,
+                        help_text="Plain text content.",
+                        verbose_name="Plain text",
+                    ),
+                ),
+                (
+                    "html",
+                    models.TextField(
+                        blank=True, help_text="HTML content.", verbose_name="HTML"
+                    ),
+                ),
                 (
                     "context",
                     JSONField(
@@ -82,6 +94,8 @@ class Migration(migrations.Migration):
             ],
             options={
                 "get_latest_by": "timestamp",
+                "verbose_name": "Email message",
+                "verbose_name_plural": "Email messages sent",
             },
         ),
     ]

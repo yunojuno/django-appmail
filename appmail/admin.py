@@ -238,9 +238,9 @@ class LoggedMessageAdmin(AdminBase):
 
     formfield_overrides = {JSONField: {"widget": JSONWidget}}
 
-    list_display = ("to", "template", "_subject", "timestamp")
+    list_display = ("to", "template_name", "_subject", "timestamp")
 
-    list_filter = ("template",)
+    list_filter = ("timestamp", "template__name", "template__language")
 
     raw_id_fields = ("user", "template")
 
@@ -260,6 +260,9 @@ class LoggedMessageAdmin(AdminBase):
     def _subject(self, obj: LoggedMessage) -> str:
         """Truncate the subject for display."""
         return truncatechars(obj.subject, 50)
+
+    def template_name(self, obj: LoggedMessage) -> str:
+        return obj.template.name
 
     def template_context(self, obj: LoggedMessage) -> str:
         """Pretty print version of the template context dict."""
