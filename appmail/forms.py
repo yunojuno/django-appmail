@@ -6,12 +6,11 @@ from typing import Dict, List, Optional, Union
 
 from django import forms
 from django.contrib import messages
-from django.core.mail import EmailMultiAlternatives
 from django.core.validators import validate_email
 from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _lazy
 
-from .models import EmailTemplate, EmailTemplateQuerySet
+from .models import AppmailMultiAlternatives, EmailTemplate, EmailTemplateQuerySet
 
 logger = logging.getLogger(__name__)
 
@@ -121,7 +120,7 @@ class EmailTestForm(forms.Form):
         except (TypeError, ValueError) as ex:
             raise forms.ValidationError(_lazy("Invalid JSON: %s" % ex))
 
-    def _create_message(self, template: EmailTemplate) -> EmailMultiAlternatives:
+    def _create_message(self, template: EmailTemplate) -> AppmailMultiAlternatives:
         """Create EmailMultiMessage from form data."""
         return template.create_message(
             self.cleaned_data["context"],

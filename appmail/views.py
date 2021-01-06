@@ -13,7 +13,7 @@ from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from .forms import EmailTestForm, MultiEmailTemplateField
 from .helpers import merge_dicts
-from .models import EmailTemplate
+from .models import EmailTemplate, LoggedMessage
 
 logger = logging.getLogger(__name__)
 
@@ -96,3 +96,27 @@ def send_test_email(request: HttpRequest) -> HttpResponseRedirect:
                 },
                 status=422,
             )
+
+
+@user_passes_test(lambda u: u.is_staff)
+def resend_email(request: HttpRequest, email_id: int) -> HttpResponseRedirect:
+    """Resend a specific LoggedMessage."""
+    email = LoggedMessage.objects.get(id=email_id)
+    email.resend()
+    return HttpResponseRedirect(reverse("admin:appmail_loggedmessage_changelist"))
+
+
+@user_passes_test(lambda u: u.is_staff)
+@xframe_options_sameorigin
+def render_message_body(
+    request: HttpRequest, email_id: int, content_type: str
+) -> HttpResponse:
+    """Render the email body as plain text or HTML."""
+    email = get_object_or_404(LoggedMessage, id=email_id)
+    if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
+        return HttpResponse(email.body, content_type=content_type)
+    if content_type == EmailTemplate.CONTENT_TYPE_HTML:
+        return HttpResponse(email.html, content_type=content_type)
+    # do not return the content_type to the user, as it is
+    # user-generated and _could_ be a vulnerability.
+    return HttpResponse("Invalid content_type specified.", status=400)

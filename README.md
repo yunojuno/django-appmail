@@ -1,22 +1,13 @@
-.. image:: https://travis-ci.org/yunojuno/django-appmail.svg?branch=master
-    :target: https://travis-ci.org/yunojuno/django-appmail
-
-.. image:: https://badge.fury.io/py/django-appmail.svg
-    :target: https://badge.fury.io/py/django-appmail
-
-Django-AppMail
---------------
+# Django-AppMail
 
 Django app for managing transactional email templates.
 
-Compatibility
-=============
+## Compatibility
 
-This project now requires Django2.2+ and Python3.7+. If you require a previous
+This project now requires Django 3.0+ and Python 3.7+. If you require a previous
 version you will have to refer to the relevant branch or tag.
 
-Background
-==========
+## Background
 
 This project arose out of a project to integrate a large transactional Django
 application with Mandrill, and the lessons learned. It also owes a minor h/t
@@ -33,18 +24,17 @@ This is **not** a WYSIWYG HTML editor, and it doesn't do anything clever. It
 doesn't handle the sending of the emails - it simply provides a convenient
 mechanism for storing and rendering email content.
 
-.. code:: python
+```python
+from appmail.models import EmailTemplate
 
-    from appmail.models import EmailTemplate
-
-    def send_order_confirmation(order_id):
-        order = Orders.objects.get(id=order_id)
-        template = EmailTemplate.objects.current('order_confirmation')
-        context = { "order": order }
-        # create_message accepts EmailMultiAlternatives constructor kwargs
-        # and returns a standard Django email object which can be updated / sent.
-        message = template.create_message(context, to=[order.recipient.email])
-        message.send()
+def send_order_confirmation(order_id):
+    order = Orders.objects.get(id=order_id)
+    template = EmailTemplate.objects.current('order_confirmation')
+    context = { "order": order }
+    # create_message accepts EmailMultiAlternatives constructor kwargs
+    message = template.create_message(context, to=[order.recipient.email])
+    message.send()
+```
 
 The core requirements are:
 
@@ -66,14 +56,14 @@ language and version properties have sensible defaults (
 don't require it. There is no inheritance or relationship between different
 languages and versions - they are stored as independent objects.
 
-.. code:: python
-
-    # get the default order_summary email (language = settings.LANGUAGE_CODE)
-    template = EmailTemplate.objects.current('order_summary')
-    # get the french version
-    template = EmailTemplate.objects.current('order_summary', language='fr')
-    # get a specific version
-    template = EmailTemplate.objects.version('order_summary', 1)
+```python
+# get the default order_summary email (language = settings.LANGUAGE_CODE)
+template = EmailTemplate.objects.current('order_summary')
+# get the french version
+template = EmailTemplate.objects.current('order_summary', language='fr')
+# get a specific version
+template = EmailTemplate.objects.version('order_summary', 1)
+```
 
 **Template syntax**
 
@@ -93,60 +83,31 @@ having to rely on a developer to make the changes is acceptable.
 
 You can send test emails to an email address through the admin list view.
 
-.. image:: screenshots/appmail-test-email-action.png
-    :alt: EmailTemplate admin change form
+<img src="screenshots/appmail-test-email-action.png" alt="EmailTemplate admin change form" />
 
 The custom admin action 'Send test emails' will redirect to an intermediate
 page where you can enter the recipient email address and send the email:
 
-.. image:: screenshots/appmail-test-email-send.png
+<img src="screenshots/appmail-test-email-send.png"/>
 
 There is also a linkon individual template admin pages (top-right, next to the history link):
 
-.. image:: screenshots/appmail-template-change-form.png
-    :alt: EmailTemplate admin change form
+<img src="screenshots/appmail-template-change-form.png" alt="EmailTemplate admin change form" />
 
-Tests
------
+## Tests
 
 There is a test suite for the app, which is best run through ``tox``.
 
-Licence
--------
+## License
 
 MIT
 
-Contributing
-------------
+## Contributing
 
 Usual rules apply:
 
 1. Fork to your own account
-2. Create a branch, fix the issue / add the feature
+2. Fix the issue / add the feature
 3. Submit PR
 
 Please take care to follow the coding style - and PEP8.
-
-
-Release
--------
-
-If you have found yourself in the situation of having to release a new version, and assuming you already have the necessary PyPi permissions, here are the next steps you need to take:
-
-**1. Update `setup.py` with the bumped version. Push it to master**
- - PATCH version for backwards-compatible hotfixes
- - MINOR version for backwards-compatible features
- - MAJOR version for incompatible features
-
-**2. Tag this new version by running the following commands**
- - `git tag -a v1.0.x -m v.1.0.x`
- - `git push --tags`
-
-Now, if you go to github and take a look at the tags, you should be able to see your version among them.
-
-**3. Build the wheel**
- - `python3 setup.py sdist bdist_wheel`
-
-**4. Upload it on PyPi using twine**
- - `twine upload dist/*`
- - you will be asked to provide your PyPi username and password

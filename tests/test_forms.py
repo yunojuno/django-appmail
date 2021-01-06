@@ -2,7 +2,6 @@
 from unittest import mock
 
 from django.core.exceptions import ValidationError
-from django.core.mail import EmailMultiAlternatives
 from django.forms import Textarea
 from django.http import HttpRequest
 from django.test import TestCase
@@ -13,7 +12,7 @@ from appmail.forms import (
     MultiEmailField,
     MultiEmailTemplateField,
 )
-from appmail.models import EmailTemplate
+from appmail.models import AppmailMultiAlternatives, EmailTemplate
 
 
 class JSONWidgetTests(TestCase):
@@ -93,9 +92,9 @@ class EmailTestFormTests(TestCase):
         self.assertEqual(email.bcc, [])
 
     @mock.patch("appmail.forms.messages")
-    @mock.patch.object(EmailMultiAlternatives, "send")
+    @mock.patch.object(AppmailMultiAlternatives, "send")
     def test_send_emails(self, mock_send, mock_messages):
-        template = EmailTemplate()
+        template = EmailTemplate().save()
         form = EmailTestForm()
         form.cleaned_data = {
             "context": {"foo": "bar"},

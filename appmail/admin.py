@@ -1,18 +1,21 @@
 from __future__ import annotations
 
-from typing import Tuple
+import json
+from typing import Optional, Tuple
 
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponseRedirect
+from django.template.defaultfilters import truncatechars
 from django.urls import reverse
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _lazy
 
 from .compat import JSONField
 from .forms import JSONWidget
-from .models import EmailTemplate
+from .models import EmailTemplate, LoggedMessage
 
 
 class ValidTemplateListFilter(admin.SimpleListFilter):
@@ -58,7 +61,25 @@ class ValidTemplateListFilter(admin.SimpleListFilter):
             return queryset.filter(pk__in=invalid_ids)
 
 
-class EmailTemplateAdmin(admin.ModelAdmin):
+class AdminBase(admin.ModelAdmin):
+    def iframe(self, url: str) -> str:
+        """Return an iframe containing the url for display in change view."""
+        return format_html(
+            f"<iframe class='appmail' src='{url}' onload='resizeIframe(this)'></iframe>"
+            f"<br/><a href='{url}' target='_blank'>View in new tab.</a>"
+        )
+
+    def pretty_print(self, data: Optional[dict]) -> str:
+        """Convert dict into formatted HTML."""
+        if data is None:
+            return "(None)"
+        pretty = json.dumps(data, sort_keys=True, indent=4, separators=(",", ": "))
+        html = pretty.replace(" ", "&nbsp;").replace("\n", "<br>")
+        return mark_safe("<pre><code>%s</code></pre>" % html)
+
+
+@admin.register(EmailTemplate)
+class EmailTemplateAdmin(AdminBase):
 
     formfield_overrides = {JSONField: {"widget": JSONWidget}}
 
@@ -78,12 +99,14 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     readonly_fields = ("render_subject", "render_text", "render_html")
 
     search_fields = ("name", "subject")
+
     actions = (
         "activate_templates",
         "deactivate_templates",
         "clone_templates",
         "send_test_emails",
     )
+
     fieldsets = (
         (
             "Basic Information",
@@ -103,14 +126,6 @@ class EmailTemplateAdmin(admin.ModelAdmin):
             },
         ),
     )
-
-    def _iframe(self, url: str) -> str:
-        return format_html(
-            "<iframe class='appmail' src='{}' onload='resizeIframe(this)'></iframe>"
-            "<br/><a href='{}' target='_blank'>View in new tab.</a>",
-            url,
-            url,
-        )
 
     # these functions are here rather than on the model so that we can get the
     # boolean icon.
@@ -141,7 +156,7 @@ class EmailTemplateAdmin(admin.ModelAdmin):
             url = reverse(
                 "appmail:render_template_subject", kwargs={"template_id": obj.id}
             )
-        return self._iframe(url)
+        return self.iframe(url)
 
     render_subject.short_description = "Rendered subject"  # type: ignore
     render_subject.allow_tags = True  # type: ignore
@@ -153,7 +168,7 @@ class EmailTemplateAdmin(admin.ModelAdmin):
             url = reverse(
                 "appmail:render_template_body_text", kwargs={"template_id": obj.id}
             )
-        return self._iframe(url)
+        return self.iframe(url)
 
     render_text.short_description = "Rendered body (plain)"  # type: ignore
     render_text.allow_tags = True  # type: ignore
@@ -165,7 +180,7 @@ class EmailTemplateAdmin(admin.ModelAdmin):
             url = reverse(
                 "appmail:render_template_body_html", kwargs={"template_id": obj.id}
             )
-        return self._iframe(url)
+        return self.iframe(url)
 
     render_html.short_description = "Rendered body (html)"  # type: ignore
     render_html.allow_tags = True  # type: ignore
@@ -216,4 +231,48 @@ class EmailTemplateAdmin(admin.ModelAdmin):
     )
 
 
-admin.site.register(EmailTemplate, EmailTemplateAdmin)
+@admin.register(LoggedMessage)
+class LoggedMessageAdmin(AdminBase):
+
+    exclude = ("html", "context")
+
+    formfield_overrides = {JSONField: {"widget": JSONWidget}}
+
+    list_display = ("to", "template", "_subject", "timestamp")
+
+    list_filter = ("template",)
+
+    raw_id_fields = ("user", "template")
+
+    readonly_fields = (
+        "to",
+        "user",
+        "template",
+        "template_context",
+        "subject",
+        "body",
+        "render_html",
+        "timestamp",
+    )
+
+    search_fields = ("to", "subject")
+
+    def _subject(self, obj: LoggedMessage) -> str:
+        """Truncate the subject for display."""
+        return truncatechars(obj.subject, 50)
+
+    def template_context(self, obj: LoggedMessage) -> str:
+        """Pretty print version of the template context dict."""
+        return self.pretty_print(obj.context)
+
+    def render_html(self, obj: LoggedMessage) -> str:
+        if obj.id is None:
+            url = ""
+        else:
+            url = reverse(
+                "appmail:render_message_body_html", kwargs={"email_id": obj.id}
+            )
+        return self.iframe(url)
+
+    render_html.short_description = "HTML (rendered)"  # type: ignore
+    render_html.allow_tags = True  # type: ignore
