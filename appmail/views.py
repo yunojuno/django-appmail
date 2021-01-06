@@ -5,10 +5,12 @@ import json
 import logging
 
 from django.conf import settings as django_settings
+from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.http import HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.translation import gettext as _
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from .forms import EmailTestForm, MultiEmailTemplateField
@@ -103,6 +105,7 @@ def resend_email(request: HttpRequest, email_id: int) -> HttpResponseRedirect:
     """Resend a specific LoggedMessage."""
     email = LoggedMessage.objects.get(id=email_id)
     email.resend()
+    messages.success(request, _("Resent email to {}".format(email.to)))
     return HttpResponseRedirect(reverse("admin:appmail_loggedmessage_changelist"))
 
 
