@@ -1,13 +1,27 @@
 from email.mime.image import MIMEImage
 from unittest import mock
 
+import pytest
 from django.conf import settings
+from django.core import mail
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.test import TestCase
 
-from appmail.models import AppmailMessage, EmailTemplate
+from appmail.models import AppmailMessage, EmailTemplate, LoggedMessage
+
+
+@pytest.fixture
+def appmail_message(scope="class"):
+    """Pytest fixture that creates a valid AppmailMessage."""
+    template = EmailTemplate.objects.create(
+        subject="Welcome message",
+        body_text="Hello {{ first_name }}",
+        body_html="<h1>Hello {{ first_name }}</h1>",
+    )
+    context = {"first_name": "fr¡da"}
+    return AppmailMessage(template, context, to=["fred@example.com"])
 
 
 class EmailTemplateQuerySetTests(TestCase):
@@ -144,7 +158,7 @@ class EmailTemplateTests(TestCase):
 
 
 class AppmailMessageTests(TestCase):
-    def test_create_message(self):
+    def test_init(self):
         template = EmailTemplate(
             subject="Welcome message",
             body_text="Hello {{ first_name }}",
@@ -193,7 +207,7 @@ class AppmailMessageTests(TestCase):
         ):
             AppmailMessage(template, {}, alternatives="foo")
 
-    def test_create_message__with_attachments__allowed(self):
+    def test_init__with_attachments__allowed(self):
         template = EmailTemplate(
             subject="Welcome {{ first_name }}",
             body_text="Hello {{ first_name }}",
@@ -202,7 +216,7 @@ class AppmailMessageTests(TestCase):
         )
         AppmailMessage(template, {}, attachments=[mock.Mock(spec=MIMEImage)])
 
-    def test_create_message__with_attachments__disallowed(self):
+    def test_init__with_attachments__disallowed(self):
         template = EmailTemplate(
             subject="Welcome {{ first_name }}",
             body_text="Hello {{ first_name }}",
@@ -214,7 +228,7 @@ class AppmailMessageTests(TestCase):
         ):
             AppmailMessage(template, {}, attachments=[mock.Mock(spec=MIMEImage)])
 
-    def test_create_message__special_characters(self):
+    def test_init__special_characters(self):
         template = EmailTemplate(
             subject="Welcome {{ first_name }}",
             body_text="Hello {{ first_name }}",
@@ -231,7 +245,7 @@ class AppmailMessageTests(TestCase):
             [("<h1>Hello Test &amp; Company</h1>", EmailTemplate.CONTENT_TYPE_HTML)],
         )
 
-    def test_create_message__special_characters__complex_context(self):
+    def test_init__special_characters__complex_context(self):
         template = EmailTemplate(
             subject="Hello {{ user.first_name }} and welcome to {{ company_name }}",
             body_text="Hello {{ user.first_name }} and welcome to {{ company_name }}",
@@ -240,7 +254,6 @@ class AppmailMessageTests(TestCase):
                 "Welcome to {{ company_name }}</p>"
             ),
         )
-
         context = {
             "user": {"first_name": "Test & Company"},
             "company_name": "Me & Co Inc",
@@ -263,3 +276,26 @@ class AppmailMessageTests(TestCase):
                 )
             ],
         )
+
+
+@pytest.mark.django_db
+class TestLoggedMessage:
+    def test_template_name(self):
+        template = EmailTemplate(name="foo")
+        message = LoggedMessage(template=template)
+        assert message.template_name == "foo"
+
+    def test_rehydrate(self, appmail_message):
+        appmail_message.send(log_sent_emails=True, fail_silently=False)
+        logged = LoggedMessage.objects.get()
+        message2 = logged.rehydrate()
+        assert message2.template == appmail_message.template
+        assert message2.context == appmail_message.context
+
+    def test_resend(self, appmail_message):
+        appmail_message.send(log_sent_emails=True, fail_silently=False)
+        assert len(mail.outbox) == 1
+        logged = LoggedMessage.objects.get()
+        logged.resend()
+        assert len(mail.outbox) == 2
+        assert LoggedMessage.objects.count() == 2

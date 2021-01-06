@@ -417,14 +417,10 @@ class LoggedMessage(models.Model):
             return ""
         return self.template.name
 
-    def save(self, *args: Any, **kwargs: Any) -> LoggedMessage:
-        super().save(*args, **kwargs)
-        return self
-
-    def as_message_object(self) -> AppmailMessage:
+    def rehydrate(self) -> AppmailMessage:
         """Create a new AppmailMessage message from this email."""
         return AppmailMessage(
-            template=self.template, context=self.context, user=self.user, to=[self.to]
+            template=self.template, context=self.context, to=[self.to]
         )
 
     def resend(
@@ -432,11 +428,9 @@ class LoggedMessage(models.Model):
         log_sent_emails: bool = LOG_SENT_EMAILS,
         fail_silently: bool = False,
     ) -> None:
-        """
-        Resend the same email.
-
-        This method recreates a new AppmailMessage object and sends it.
-        """
-        self.as_message_object().send(
-            log_sent_emails=log_sent_emails, fail_silently=fail_silently
+        """Recreate new AppmailMessage from this log and send it."""
+        self.rehydrate().send(
+            log_to_user=self.user,
+            log_sent_emails=log_sent_emails,
+            fail_silently=fail_silently,
         )
