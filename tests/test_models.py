@@ -151,7 +151,7 @@ class AppmailMessageTests(TestCase):
             body_html="<h1>Hello {{ first_name }}</h1>",
         )
         context = {"first_name": "fråd"}
-        message = AppmailMessage.from_template(template, context)
+        message = AppmailMessage(template, context)
         self.assertIsInstance(message, EmailMultiAlternatives)
         self.assertEqual(message.subject, "Welcome message")
         self.assertEqual(message.body, "Hello fråd")
@@ -165,7 +165,7 @@ class AppmailMessageTests(TestCase):
         self.assertEqual(message.from_email, settings.DEFAULT_FROM_EMAIL)
         self.assertEqual(message.reply_to, [settings.DEFAULT_FROM_EMAIL])
 
-        message = AppmailMessage.from_template(
+        message = AppmailMessage(
             template,
             context,
             to=["bruce@kung.fu"],
@@ -183,15 +183,15 @@ class AppmailMessageTests(TestCase):
         with self.assertRaisesMessage(
             ValueError, "Invalid argument: 'subject' is set from the template."
         ):
-            AppmailMessage.from_template(template, {}, subject="foo")
+            AppmailMessage(template, {}, subject="foo")
         with self.assertRaisesMessage(
             ValueError, "Invalid argument: 'body' is set from the template."
         ):
-            AppmailMessage.from_template(template, {}, body="foo")
+            AppmailMessage(template, {}, body="foo")
         with self.assertRaisesMessage(
             ValueError, "Invalid argument: 'alternatives' is set from the template."
         ):
-            AppmailMessage.from_template(template, {}, alternatives="foo")
+            AppmailMessage(template, {}, alternatives="foo")
 
     def test_create_message__with_attachments__allowed(self):
         template = EmailTemplate(
@@ -200,9 +200,7 @@ class AppmailMessageTests(TestCase):
             body_html="<h1>Hello {{ first_name }}</h1>",
             supports_attachments=True,
         )
-        AppmailMessage.from_template(
-            template, {}, attachments=[mock.Mock(spec=MIMEImage)]
-        )
+        AppmailMessage(template, {}, attachments=[mock.Mock(spec=MIMEImage)])
 
     def test_create_message__with_attachments__disallowed(self):
         template = EmailTemplate(
@@ -214,9 +212,7 @@ class AppmailMessageTests(TestCase):
         with self.assertRaisesMessage(
             ValueError, "Email template does not support attachments."
         ):
-            AppmailMessage.from_template(
-                template, {}, attachments=[mock.Mock(spec=MIMEImage)]
-            )
+            AppmailMessage(template, {}, attachments=[mock.Mock(spec=MIMEImage)])
 
     def test_create_message__special_characters(self):
         template = EmailTemplate(
@@ -226,7 +222,7 @@ class AppmailMessageTests(TestCase):
         )
 
         context = {"first_name": "Test & Company"}
-        message = AppmailMessage.from_template(template, context)
+        message = AppmailMessage(template, context)
         self.assertIsInstance(message, EmailMultiAlternatives)
         self.assertEqual(message.subject, "Welcome Test & Company")
         self.assertEqual(message.body, "Hello Test & Company")
@@ -249,7 +245,7 @@ class AppmailMessageTests(TestCase):
             "user": {"first_name": "Test & Company"},
             "company_name": "Me & Co Inc",
         }
-        message = AppmailMessage.from_template(template, context)
+        message = AppmailMessage(template, context)
         self.assertIsInstance(message, EmailMultiAlternatives)
         self.assertEqual(
             message.subject, "Hello Test & Company and welcome to Me & Co Inc"

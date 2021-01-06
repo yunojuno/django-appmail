@@ -122,7 +122,7 @@ class EmailTestForm(forms.Form):
 
     def _create_message(self, template: EmailTemplate) -> AppmailMessage:
         """Create EmailMultiMessage from form data."""
-        return AppmailMessage.from_template(
+        return AppmailMessage(
             template,
             self.cleaned_data["context"],
             from_email=self.cleaned_data["from_email"],

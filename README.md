@@ -31,7 +31,7 @@ def send_order_confirmation(order_id):
     order = Orders.objects.get(id=order_id)
     template = EmailTemplate.objects.current('order_confirmation')
     context = { "order": order }
-    message = AppmailMessage.from_template(
+    message = AppmailMessage(
         template=template,
         context=context,
         to=[order.recipient.email]
