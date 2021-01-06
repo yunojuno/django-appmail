@@ -7,7 +7,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.test import TestCase
 
-from appmail.models import EmailTemplate
+from appmail.models import AppmailMessage, EmailTemplate
 
 
 class EmailTemplateQuerySetTests(TestCase):
@@ -130,6 +130,20 @@ class EmailTemplateTests(TestCase):
         )
         self.assertRaises(ValueError, template.render_body, context, content_type="foo")
 
+    def test_clone_template(self):
+        template = EmailTemplate(
+            name="Test template", language="en-us", version=0
+        ).save()
+        pk = template.pk
+        clone = template.clone()
+        template = EmailTemplate.objects.get(id=pk)
+        self.assertEqual(clone.name, template.name)
+        self.assertEqual(clone.language, template.language)
+        self.assertEqual(clone.version, 1)
+        self.assertNotEqual(clone.id, template.id)
+
+
+class AppmailMessageTests(TestCase):
     def test_create_message(self):
         template = EmailTemplate(
             subject="Welcome message",
@@ -137,7 +151,7 @@ class EmailTemplateTests(TestCase):
             body_html="<h1>Hello {{ first_name }}</h1>",
         )
         context = {"first_name": "fråd"}
-        message = template.create_message(context)
+        message = AppmailMessage.from_template(template, context)
         self.assertIsInstance(message, EmailMultiAlternatives)
         self.assertEqual(message.subject, "Welcome message")
         self.assertEqual(message.body, "Hello fråd")
@@ -151,7 +165,8 @@ class EmailTemplateTests(TestCase):
         self.assertEqual(message.from_email, settings.DEFAULT_FROM_EMAIL)
         self.assertEqual(message.reply_to, [settings.DEFAULT_FROM_EMAIL])
 
-        message = template.create_message(
+        message = AppmailMessage.from_template(
+            template,
             context,
             to=["bruce@kung.fu"],
             cc=["fred@example.com"],
@@ -168,15 +183,15 @@ class EmailTemplateTests(TestCase):
         with self.assertRaisesMessage(
             ValueError, "Invalid argument: 'subject' is set from the template."
         ):
-            template.create_message({}, subject="foo")
+            AppmailMessage.from_template(template, {}, subject="foo")
         with self.assertRaisesMessage(
             ValueError, "Invalid argument: 'body' is set from the template."
         ):
-            template.create_message({}, body="foo")
+            AppmailMessage.from_template(template, {}, body="foo")
         with self.assertRaisesMessage(
             ValueError, "Invalid argument: 'alternatives' is set from the template."
         ):
-            template.create_message({}, alternatives="foo")
+            AppmailMessage.from_template(template, {}, alternatives="foo")
 
     def test_create_message__with_attachments__allowed(self):
         template = EmailTemplate(
@@ -185,7 +200,9 @@ class EmailTemplateTests(TestCase):
             body_html="<h1>Hello {{ first_name }}</h1>",
             supports_attachments=True,
         )
-        template.create_message({}, attachments=[mock.Mock(spec=MIMEImage)])
+        AppmailMessage.from_template(
+            template, {}, attachments=[mock.Mock(spec=MIMEImage)]
+        )
 
     def test_create_message__with_attachments__disallowed(self):
         template = EmailTemplate(
@@ -197,7 +214,9 @@ class EmailTemplateTests(TestCase):
         with self.assertRaisesMessage(
             ValueError, "Email template does not support attachments."
         ):
-            template.create_message({}, attachments=[mock.Mock(spec=MIMEImage)])
+            AppmailMessage.from_template(
+                template, {}, attachments=[mock.Mock(spec=MIMEImage)]
+            )
 
     def test_create_message__special_characters(self):
         template = EmailTemplate(
@@ -207,7 +226,7 @@ class EmailTemplateTests(TestCase):
         )
 
         context = {"first_name": "Test & Company"}
-        message = template.create_message(context)
+        message = AppmailMessage.from_template(template, context)
         self.assertIsInstance(message, EmailMultiAlternatives)
         self.assertEqual(message.subject, "Welcome Test & Company")
         self.assertEqual(message.body, "Hello Test & Company")
@@ -230,7 +249,7 @@ class EmailTemplateTests(TestCase):
             "user": {"first_name": "Test & Company"},
             "company_name": "Me & Co Inc",
         }
-        message = template.create_message(context)
+        message = AppmailMessage.from_template(template, context)
         self.assertIsInstance(message, EmailMultiAlternatives)
         self.assertEqual(
             message.subject, "Hello Test & Company and welcome to Me & Co Inc"
@@ -248,15 +267,3 @@ class EmailTemplateTests(TestCase):
                 )
             ],
         )
-
-    def test_clone_template(self):
-        template = EmailTemplate(
-            name="Test template", language="en-us", version=0
-        ).save()
-        pk = template.pk
-        clone = template.clone()
-        template = EmailTemplate.objects.get(id=pk)
-        self.assertEqual(clone.name, template.name)
-        self.assertEqual(clone.language, template.language)
-        self.assertEqual(clone.version, 1)
-        self.assertNotEqual(clone.id, template.id)

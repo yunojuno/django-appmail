@@ -25,14 +25,17 @@ doesn't handle the sending of the emails - it simply provides a convenient
 mechanism for storing and rendering email content.
 
 ```python
-from appmail.models import EmailTemplate
+from appmail.models import EmailTemplate, AppmailMessage
 
 def send_order_confirmation(order_id):
     order = Orders.objects.get(id=order_id)
     template = EmailTemplate.objects.current('order_confirmation')
     context = { "order": order }
-    # create_message accepts EmailMultiAlternatives constructor kwargs
-    message = template.create_message(context, to=[order.recipient.email])
+    message = AppmailMessage.from_template(
+        template=template,
+        context=context,
+        to=[order.recipient.email]
+    )
     message.send()
 ```
 

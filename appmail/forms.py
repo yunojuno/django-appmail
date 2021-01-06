@@ -10,7 +10,7 @@ from django.core.validators import validate_email
 from django.http import HttpRequest
 from django.utils.translation import gettext_lazy as _lazy
 
-from .models import AppmailMultiAlternatives, EmailTemplate, EmailTemplateQuerySet
+from .models import AppmailMessage, EmailTemplate, EmailTemplateQuerySet
 
 logger = logging.getLogger(__name__)
 
@@ -120,9 +120,10 @@ class EmailTestForm(forms.Form):
         except (TypeError, ValueError) as ex:
             raise forms.ValidationError(_lazy("Invalid JSON: %s" % ex))
 
-    def _create_message(self, template: EmailTemplate) -> AppmailMultiAlternatives:
+    def _create_message(self, template: EmailTemplate) -> AppmailMessage:
         """Create EmailMultiMessage from form data."""
-        return template.create_message(
+        return AppmailMessage.from_template(
+            template,
             self.cleaned_data["context"],
             from_email=self.cleaned_data["from_email"],
             to=self.cleaned_data["to"],

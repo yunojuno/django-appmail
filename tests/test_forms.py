@@ -12,7 +12,7 @@ from appmail.forms import (
     MultiEmailField,
     MultiEmailTemplateField,
 )
-from appmail.models import AppmailMultiAlternatives, EmailTemplate
+from appmail.models import AppmailMessage, EmailTemplate
 
 
 class JSONWidgetTests(TestCase):
@@ -92,7 +92,7 @@ class EmailTestFormTests(TestCase):
         self.assertEqual(email.bcc, [])
 
     @mock.patch("appmail.forms.messages")
-    @mock.patch.object(AppmailMultiAlternatives, "send")
+    @mock.patch.object(AppmailMessage, "send")
     def test_send_emails(self, mock_send, mock_messages):
         template = EmailTemplate().save()
         form = EmailTestForm()

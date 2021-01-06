@@ -255,46 +255,6 @@ class EmailTemplate(models.Model):
         else:
             return {}
 
-    def create_message(
-        self, context: dict, **email_kwargs: Any
-    ) -> AppmailMultiAlternatives:
-        """
-        Return populated AppmailMultiAlternatives object.
-
-        This function is a helper that will render the template subject and
-        plain text / html content, as well as populating all of the standard
-        EmailMultiAlternatives properties.
-
-            >>> template = EmailTemplate.objects.get_latest('order_summary')
-            >>> context = {'first_name': "Bruce", 'last_name'="Lee"}
-            >>> email = template.create_message(context, to=['bruce@kung.fu'])
-            >>> email.send()
-
-        The function supports all of the standard EmailMultiAlternatives
-        constructor kwargs except for 'subject', 'body' and 'alternatives' - as
-        these are set from the template (subject, body_text and body_html).
-
-        """
-        if "subject" in email_kwargs:
-            raise ValueError(_("Invalid argument: 'subject' is set from the template."))
-        if "body" in email_kwargs:
-            raise ValueError(_("Invalid argument: 'body' is set from the template."))
-        if "alternatives" in email_kwargs:
-            raise ValueError(
-                _("Invalid argument: 'alternatives' is set from the template.")
-            )
-        if email_kwargs.get("attachments", None) and not self.supports_attachments:
-            raise ValueError(_("Email template does not support attachments."))
-
-        email_kwargs["reply_to"] = email_kwargs.get("reply_to") or self.reply_to_list
-        email_kwargs["from_email"] = email_kwargs.get("from_email") or self.from_email
-        if ADD_EXTRA_HEADERS:
-            email_kwargs["headers"] = email_kwargs.get("headers", {})
-            email_kwargs["headers"].update(self.extra_headers)
-        # alternatives is a list of (content, mimetype) tuples
-        # https://github.com/django/django/blob/master/django/core/mail/message.py#L435
-        return AppmailMultiAlternatives(template=self, context=context, **email_kwargs)
-
     def clone(self) -> EmailTemplate:
         """Create a copy of the current object, increase version by 1."""
         self.pk = None
@@ -302,7 +262,7 @@ class EmailTemplate(models.Model):
         return self.save()
 
 
-class AppmailMultiAlternatives(EmailMultiAlternatives):
+class AppmailMessage(EmailMultiAlternatives):
     """
     Subclass EmailMultiAlternatives to override send method.
 
@@ -327,7 +287,7 @@ class AppmailMultiAlternatives(EmailMultiAlternatives):
         **email_kwargs: Any,
     ):
         """
-        Build new AppmailMultiAlternatives objects from EmailTemplate.
+        Build new AppmailMessage objects from EmailTemplate.
 
         The template and context are used to render the email subject line,
         body and HTML.
@@ -352,10 +312,51 @@ class AppmailMultiAlternatives(EmailMultiAlternatives):
         email_kwargs["alternatives"] = [(self.html, EmailTemplate.CONTENT_TYPE_HTML)]
         super().__init__(**email_kwargs)
 
+    @classmethod
+    def from_template(
+        cls, template: EmailTemplate, context: dict, **email_kwargs: Any
+    ) -> AppmailMessage:
+        """
+        Build new object from an EmailTemplate and context.
+
+        This function is a helper that will render the template subject and
+        plain text / html content, as well as populating all of the standard
+        EmailMultiAlternatives properties.
+
+            >>> template = EmailTemplate.objects.get_latest('order_summary')
+            >>> context = {'first_name': "Bruce", 'last_name'="Lee"}
+            >>> email = AppmailMessage.from_template(context, to=['bruce@kung.fu'])
+            >>> email.send()
+
+        The function supports all of the standard EmailMultiAlternatives
+        constructor kwargs except for 'subject', 'body' and 'alternatives' - as
+        these are set from the template (subject, body_text and body_html).
+
+        """
+        if "subject" in email_kwargs:
+            raise ValueError(_("Invalid argument: 'subject' is set from the template."))
+        if "body" in email_kwargs:
+            raise ValueError(_("Invalid argument: 'body' is set from the template."))
+        if "alternatives" in email_kwargs:
+            raise ValueError(
+                _("Invalid argument: 'alternatives' is set from the template.")
+            )
+        if email_kwargs.get("attachments", None) and not template.supports_attachments:
+            raise ValueError(_("Email template does not support attachments."))
+
+        email_kwargs.setdefault("reply_to", template.reply_to_list)
+        email_kwargs.setdefault("from_email", template.from_email)
+        email_kwargs.setdefault("headers", {})
+        if ADD_EXTRA_HEADERS:
+            email_kwargs["headers"].update(template.extra_headers)
+        return AppmailMessage(template=template, context=context, **email_kwargs)
+
     @transaction.atomic
     def send(
         self,
+        *,
         log_sent_emails: bool = LOG_SENT_EMAILS,
+        log_to_user: settings.AUTH_USER_MODEL = None,
         fail_silently: bool = False,
     ) -> int:
         """
@@ -364,6 +365,9 @@ class AppmailMultiAlternatives(EmailMultiAlternatives):
         This method first sends the email using the underlying
         send method. If any messages are sent (return value > 0),
         then the message is logged as a LoggedMessage record.
+
+        The `log_to_user` param is a User object, and is used for logging
+        purposes only - it does not overwrite the email.to property.
 
         """
         sent = super().send(fail_silently=fail_silently)
@@ -377,7 +381,7 @@ class AppmailMultiAlternatives(EmailMultiAlternatives):
             LoggedMessage.objects.create(
                 template=self.template,
                 to=recipient_email,
-                user=self.user,
+                user=log_to_user,
                 subject=self.subject,
                 body=self.body,
                 html=self.html,
@@ -448,9 +452,9 @@ class LoggedMessage(models.Model):
         super().save(*args, **kwargs)
         return self
 
-    def as_message_object(self) -> AppmailMultiAlternatives:
-        """Create a new AppmailMultiAlternatives message from this email."""
-        return AppmailMultiAlternatives(
+    def as_message_object(self) -> AppmailMessage:
+        """Create a new AppmailMessage message from this email."""
+        return AppmailMessage(
             template=self.template, context=self.context, user=self.user, to=[self.to]
         )
 
@@ -462,7 +466,7 @@ class LoggedMessage(models.Model):
         """
         Resend the same email.
 
-        This method recreates a new AppmailMultiAlternatives object and sends it.
+        This method recreates a new AppmailMessage object and sends it.
         """
         self.as_message_object().send(
             log_sent_emails=log_sent_emails, fail_silently=fail_silently
