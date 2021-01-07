@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.core.serializers.json import DjangoJSONEncoder
@@ -21,6 +22,8 @@ from .settings import (
     LOG_SENT_EMAILS,
     VALIDATE_ON_SAVE,
 )
+
+User = get_user_model()
 
 
 class EmailTemplateQuerySet(models.query.QuerySet):
@@ -323,12 +326,28 @@ class AppmailMessage(EmailMultiAlternatives):
         """Return the size of the underlying message in bytes."""
         return len(self.message().as_bytes())
 
+    def _user(self, email: str) -> Optional[settings.AUTH_USER_MODEL]:
+        """
+        Fetch a user matching the 'to' email address.
+
+        This method assumes that emails are unique. If users share emails,
+        then we return None, as we cannot determine who is the correct
+        recipient.
+
+        """
+        email = email.strip().lower()
+        if not email:
+            return None
+        try:
+            return User.objects.get(email__iexact=email)
+        except (User.DoesNotExist, User.MultipleObjectsReturned):
+            return None
+
     @transaction.atomic
     def send(
         self,
         *,
         log_sent_emails: bool = LOG_SENT_EMAILS,
-        log_to_user: settings.AUTH_USER_MODEL = None,
         fail_silently: bool = False,
     ) -> int:
         """
@@ -336,11 +355,7 @@ class AppmailMessage(EmailMultiAlternatives):
 
         This method first sends the email using the underlying
         send method inherited from EmailMultiMessage. If any messages
-        are sent (return value > 0), then the message is logged as a
-        LoggedMessage record.
-
-        The `log_to_user` param is a User object, and is used for logging
-        purposes only - it does not overwrite the email.to property.
+        are sent (return value > 0), then the message is logged.
 
         """
         sent = super().send(fail_silently=fail_silently)
@@ -348,19 +363,24 @@ class AppmailMessage(EmailMultiAlternatives):
             return sent
         if not sent:
             return 0
-        # NB it is expected that there will only be a single recipient,
-        # however the `EmailMessage.to` property is a list, so we iterate.
-        for recipient_email in self.to:
+        return len(LoggedMessage.objects.log(self))
+
+
+class LoggedMessageManager(models.Manager):
+    def log(self, message: AppmailMessage) -> List[LoggedMessage]:
+        """Log the sending of emails from an AppmailMessage."""
+        return [
             LoggedMessage.objects.create(
-                template=self.template,
-                to=recipient_email,
-                user=log_to_user,
-                subject=self.subject,
-                body=self.body,
-                html=self.html,
-                context=self.context,
+                template=message.template,
+                to=email,
+                user=message._user(email),
+                subject=message.subject,
+                body=message.body,
+                html=message.html,
+                context=message.context,
             )
-        return sent
+            for email in message.to
+        ]
 
 
 class LoggedMessage(models.Model):
@@ -400,6 +420,8 @@ class LoggedMessage(models.Model):
         help_text=_lazy("Appmail template context."),
     )
 
+    objects = LoggedMessageManager()
+
     class Meta:
         get_latest_by = "timestamp"
         verbose_name = "Email message"
@@ -434,7 +456,6 @@ class LoggedMessage(models.Model):
     ) -> None:
         """Recreate new AppmailMessage from this log and send it."""
         self.rehydrate().send(
-            log_to_user=self.user,
             log_sent_emails=log_sent_emails,
             fail_silently=fail_silently,
         )

@@ -9,7 +9,12 @@ from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.test import TestCase
 
-from appmail.models import AppmailMessage, EmailTemplate, LoggedMessage
+from appmail.models import (
+    AppmailMessage,
+    EmailTemplate,
+    LoggedMessage,
+    LoggedMessageManager,
+)
 
 
 @pytest.fixture
@@ -276,6 +281,30 @@ class AppmailMessageTests(TestCase):
                 )
             ],
         )
+
+    @mock.patch.object(LoggedMessageManager, "log")
+    def test_send__logging(self, mock_log):
+        template = EmailTemplate.objects.create(
+            subject="Welcome message",
+            body_text="Hello {{ first_name }}",
+            body_html="<h1>Hello {{ first_name }}</h1>",
+        )
+        context = {"first_name": "fråd"}
+        message = AppmailMessage(template, context, to=["fred@example.com"])
+        message.send()
+        assert mock_log.call_count == 1
+
+    @mock.patch.object(LoggedMessageManager, "log")
+    def test_send__no_logging(self, mock_log):
+        template = EmailTemplate.objects.create(
+            subject="Welcome message",
+            body_text="Hello {{ first_name }}",
+            body_html="<h1>Hello {{ first_name }}</h1>",
+        )
+        context = {"first_name": "fråd"}
+        message = AppmailMessage(template, context, to=["fred@example.com"])
+        message.send(log_sent_emails=False)
+        assert mock_log.call_count == 0
 
 
 @pytest.mark.django_db
