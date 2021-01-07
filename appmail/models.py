@@ -319,6 +319,10 @@ class AppmailMessage(EmailMultiAlternatives):
         self.context = context
         self.html = html
 
+    def size_in_bytes(self) -> int:
+        """Return the size of the underlying message in bytes."""
+        return len(self.message().as_bytes())
+
     @transaction.atomic
     def send(
         self,
