@@ -10,6 +10,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, transaction
 from django.http import HttpRequest
 from django.template import Context, Template, TemplateDoesNotExist, TemplateSyntaxError
+from django.urls import NoReverseMatch
 from django.utils.timezone import now as tz_now
 from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _lazy
@@ -253,7 +254,7 @@ class EmailTemplate(models.Model):
             self.render_body({}, content_type=content_type)
         except TemplateDoesNotExist as ex:
             return {field_name: _("Template does not exist: {}".format(ex))}
-        except TemplateSyntaxError as ex:
+        except (TemplateSyntaxError, NoReverseMatch) as ex:
             return {field_name: str(ex)}
         else:
             return {}

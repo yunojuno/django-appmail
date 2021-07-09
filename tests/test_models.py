@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.mail import EmailMultiAlternatives
 from django.template import TemplateDoesNotExist, TemplateSyntaxError
 from django.test import TestCase
+from django.urls import NoReverseMatch
 
 from appmail.models import (
     AppmailMessage,
@@ -101,20 +102,41 @@ class EmailTemplateTests(TestCase):
         self.assertRaises(Exception, template._validate_subject)
 
     @mock.patch.object(EmailTemplate, "render_body")
-    def test__validate_body(self, mock_render):
+    def test__validate_body__success(self, mock_render):
+        template = EmailTemplate()
+        mock_render.side_effect = None
+        self.assertEqual(template._validate_body(EmailTemplate.CONTENT_TYPE_HTML), {})
+
+    @mock.patch.object(EmailTemplate, "render_body")
+    def test__validate_body__template_does_not_exist(self, mock_render):
         template = EmailTemplate()
         mock_render.side_effect = TemplateDoesNotExist("foo.html")
         self.assertEqual(
             template._validate_body(content_type=EmailTemplate.CONTENT_TYPE_PLAIN),
             {"body_text": "Template does not exist: foo.html"},
         )
+
+    @mock.patch.object(EmailTemplate, "render_body")
+    def test__validate_body__template_syntax_error(self, mock_render):
+        template = EmailTemplate()
         mock_render.side_effect = TemplateSyntaxError("No can do")
         self.assertEqual(
             template._validate_body(content_type=EmailTemplate.CONTENT_TYPE_HTML),
             {"body_html": "No can do"},
         )
-        mock_render.side_effect = None
-        self.assertEqual(template._validate_body(EmailTemplate.CONTENT_TYPE_HTML), {})
+
+    @mock.patch.object(EmailTemplate, "render_body")
+    def test__validate_body__url_no_reverse_match(self, mock_render):
+        template = EmailTemplate()
+        mock_render.side_effect = NoReverseMatch("Reverse for 'briefs' not found.")
+        self.assertEqual(
+            template._validate_body(content_type=EmailTemplate.CONTENT_TYPE_HTML),
+            {"body_html": "Reverse for 'briefs' not found."},
+        )
+
+    @mock.patch.object(EmailTemplate, "render_body")
+    def test__validate_body__unhandled_exception(self, mock_render):
+        template = EmailTemplate()
         mock_render.side_effect = Exception("Something else")
         self.assertRaises(Exception, template._validate_body)
 
