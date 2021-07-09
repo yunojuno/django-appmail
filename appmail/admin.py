@@ -48,6 +48,13 @@ class ValidTemplateListFilter(admin.SimpleListFilter):
         """
         valid_ids = []
         invalid_ids = []
+
+        if not self.value():
+            # By default, the lookup is not run at all because it is
+            # computationally expensive to render the entire list of
+            # emails on every page load.
+            return
+
         for obj in queryset:
             try:
                 obj.clean()
