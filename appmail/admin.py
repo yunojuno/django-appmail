@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-from typing import Optional, Tuple
 
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
@@ -26,7 +25,7 @@ class ValidTemplateListFilter(admin.SimpleListFilter):
 
     def lookups(
         self, request: HttpRequest, model_admin: admin.ModelAdmin
-    ) -> Tuple[Tuple[str, str], Tuple[str, str]]:
+    ) -> tuple[tuple[str, str], tuple[str, str]]:
         """
         Return valid template True/False filter values tuples.
 
@@ -76,13 +75,13 @@ class AdminBase(admin.ModelAdmin):
             f"<br/><a href='{url}' target='_blank'>View in new tab.</a>"
         )
 
-    def pretty_print(self, data: Optional[dict]) -> str:
+    def pretty_print(self, data: dict | None) -> str:
         """Convert dict into formatted HTML."""
         if data is None:
             return "(None)"
         pretty = json.dumps(data, sort_keys=True, indent=4, separators=(",", ": "))
         html = pretty.replace(" ", "&nbsp;").replace("\n", "<br>")
-        return mark_safe("<pre><code>%s</code></pre>" % html)
+        return mark_safe("<pre><code>%s</code></pre>" % html)  # noqa: S703,S308
 
 
 @admin.register(EmailTemplate)

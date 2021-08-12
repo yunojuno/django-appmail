@@ -6,7 +6,5 @@
 *.svg
 *.json
 *.png
-*.yaml
-*.yml
 *.md
 vendor

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Callable, Dict, Iterable
 
 from django.http import HttpRequest
 
@@ -25,7 +25,7 @@ def get_context(content: str) -> dict:
     return fill_leaf_values(expand_list(extract_vars(content)))
 
 
-def extract_vars(content: str) -> List[str]:
+def extract_vars(content: str) -> list[str]:
     """
     Extract variables from template content.
 
@@ -35,10 +35,10 @@ def extract_vars(content: str) -> List[str]:
     """
     content = content or ""
     # if I was better at regex I wouldn't need the strip.
-    return list(set([s.strip() for s in TEMPLATE_VARS.findall(content)]))
+    return list({s.strip() for s in TEMPLATE_VARS.findall(content)})
 
 
-def expand_list(_list: List[str]) -> dict:
+def expand_list(_list: list[str]) -> dict:
     """
     Convert list of '.' separated values to a nested dict.
 
@@ -103,7 +103,7 @@ def merge_dicts(*dicts: dict) -> dict:
 def patch_context(
     context: dict,
     processors: Iterable[Callable[[HttpRequest], dict]],
-    request: Optional[HttpRequest] = None,
+    request: HttpRequest | None = None,
 ) -> dict:
     """Add template context_processor content to context."""
     cpx = [p(request) for p in processors]

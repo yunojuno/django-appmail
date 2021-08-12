@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -165,7 +165,7 @@ class EmailTemplate(models.Model):
         )
 
     @property
-    def extra_headers(self) -> Dict[str, str]:
+    def extra_headers(self) -> dict[str, str]:
         return {
             "X-Appmail-Template": (
                 f"name={self.name}; language={self.language}; version={self.version}"
@@ -173,7 +173,7 @@ class EmailTemplate(models.Model):
         }
 
     @property
-    def reply_to_list(self) -> List[str]:
+    def reply_to_list(self) -> list[str]:
         """Convert the reply_to field to a list."""
         return [a.strip() for a in self.reply_to.split(",")]
 
@@ -208,13 +208,13 @@ class EmailTemplate(models.Model):
     def render_subject(
         self,
         context: dict,
-        processors: List[Callable[[HttpRequest], dict]] = CONTEXT_PROCESSORS,
+        processors: list[Callable[[HttpRequest], dict]] = CONTEXT_PROCESSORS,
     ) -> str:
         """Render subject line."""
         ctx = Context(helpers.patch_context(context, processors), autoescape=False)
         return Template(self.subject).render(ctx)
 
-    def _validate_subject(self) -> Dict[str, str]:
+    def _validate_subject(self) -> dict[str, str]:
         """Try rendering the body template and capture any errors."""
         try:
             self.render_subject({})
@@ -229,7 +229,7 @@ class EmailTemplate(models.Model):
         self,
         context: dict,
         content_type: str = CONTENT_TYPE_PLAIN,
-        processors: List[Callable[[HttpRequest], dict]] = CONTEXT_PROCESSORS,
+        processors: list[Callable[[HttpRequest], dict]] = CONTEXT_PROCESSORS,
     ) -> str:
         """Render email body in plain text or HTML format."""
         if content_type not in EmailTemplate.CONTENT_TYPES:
@@ -242,7 +242,7 @@ class EmailTemplate(models.Model):
             return Template(self.body_html).render(ctx)
         raise ValueError(f"Invalid content_type '{content_type}'.")
 
-    def _validate_body(self, content_type: str) -> Dict[str, str]:
+    def _validate_body(self, content_type: str) -> dict[str, str]:
         """Try rendering the body template and capture any errors."""
         if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
             field_name = "body_text"
@@ -327,7 +327,7 @@ class AppmailMessage(EmailMultiAlternatives):
         """Return the size of the underlying message in bytes."""
         return len(self.message().as_bytes())
 
-    def _user(self, email: str) -> Optional[settings.AUTH_USER_MODEL]:
+    def _user(self, email: str) -> settings.AUTH_USER_MODEL | None:
         """
         Fetch a user matching the 'to' email address.
 
@@ -368,7 +368,7 @@ class AppmailMessage(EmailMultiAlternatives):
 
 
 class LoggedMessageManager(models.Manager):
-    def log(self, message: AppmailMessage) -> List[LoggedMessage]:
+    def log(self, message: AppmailMessage) -> list[LoggedMessage]:
         """Log the sending of emails from an AppmailMessage."""
         return [
             LoggedMessage.objects.create(

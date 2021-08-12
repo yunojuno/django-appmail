@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Dict, List, Optional, Union
+from typing import Dict, Union
 
 from django import forms
 from django.contrib import messages
@@ -35,8 +35,8 @@ class JSONWidget(forms.Textarea):
         self,
         name: str,
         value: str,
-        attrs: Optional[Dict[str, Union[str, int]]] = None,
-        renderer: Optional[forms.renderers.BaseRenderer] = None,
+        attrs: dict[str, str | int] | None = None,
+        renderer: forms.renderers.BaseRenderer | None = None,
     ) -> str:
         attrs = attrs or JSONWidget.DEFAULT_ATTRS
         value = self.format_value(value)
@@ -44,9 +44,9 @@ class JSONWidget(forms.Textarea):
 
 
 class MultiEmailField(forms.Field):
-    """Taken from https://docs.djangoproject.com/en/1.11/ref/forms/validation/#form-field-default-cleaning """  # noqa
+    """Taken from https://docs.djangoproject.com/en/1.11/ref/forms/validation/#form-field-default-cleaning"""  # noqa
 
-    def to_python(self, value: Optional[Union[List[str], str]]) -> List[str]:
+    def to_python(self, value: list[str] | str | None) -> list[str]:
         """Normalize data to a list of strings."""
         if isinstance(value, list):
             return value
@@ -56,7 +56,7 @@ class MultiEmailField(forms.Field):
 
         return [v.strip() for v in value.split(",")]
 
-    def validate(self, value: List[str]) -> None:
+    def validate(self, value: list[str]) -> None:
         """Check if value consists only of valid emails."""
         # Use the parent's handling of required fields, etc.
         super().validate(value)
@@ -68,7 +68,7 @@ class MultiEmailTemplateField(forms.Field):
     """Convert comma-separated ids into EmailTemplate queryset."""
 
     def to_python(
-        self, value: Optional[Union[EmailTemplateQuerySet, str]]
+        self, value: EmailTemplateQuerySet | str | None
     ) -> EmailTemplateQuerySet:
         """Normalize data to a queryset of EmailTemplates."""
         if isinstance(value, EmailTemplateQuerySet):
@@ -141,12 +141,16 @@ class EmailTestForm(forms.Form):
                 logger.exception("Error sending test email")
                 messages.error(
                     request,
-                    _lazy("Error sending test email '%s': %s" % (template.name, ex)),
+                    _lazy(
+                        "Error sending test email '{}': {}".format(template.name, ex)
+                    ),
                 )
             else:
                 messages.success(
                     request,
                     _lazy(
-                        "'%s' email sent to '%s'" % (template.name, ", ".join(email.to))
+                        "'{}' email sent to '{}'".format(
+                            template.name, ", ".join(email.to)
+                        )
                     ),
                 )
