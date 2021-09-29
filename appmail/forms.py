@@ -137,7 +137,7 @@ class EmailTestForm(forms.Form):
             email = self._create_message(template)
             try:
                 email.send()
-            except Exception as ex:  # pylint: disable=broad-except
+            except Exception as ex:  # noqa: B902
                 logger.exception("Error sending test email")
                 messages.error(
                     request,
