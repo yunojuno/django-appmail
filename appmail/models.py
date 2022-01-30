@@ -263,6 +263,7 @@ class EmailTemplate(models.Model):
         """Create a copy of the current object, increase version by 1."""
         self.pk = None
         self.version += 1
+        self.is_active = False
         return self.save()
 
 
