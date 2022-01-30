@@ -22,8 +22,8 @@ iframe.appmail{
 used to resize iframes to content height -->
 <script type="text/javascript">
 function resizeIframe(obj){
-    obj.style.height = 0;
-    obj.style.height = obj.contentWindow.document.body.scrollHeight + 'px';
+    contentHeight = Math.max(45, obj.contentWindow.document.body.scrollHeight);
+    obj.style.height = `${contentHeight}px`;
 }
 </script>
 {% endblock admin_change_form_document_ready %}
