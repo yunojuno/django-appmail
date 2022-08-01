@@ -13,3 +13,6 @@ CONTEXT_PROCESSORS = [
 
 # If True then emails will be logged.
 LOG_SENT_EMAILS = getattr(settings, "APPMAIL_LOG_SENT_EMAILS", True)
+
+# The interval, in days, after which logs can be deleted
+LOG_RETENTION_PERIOD = getattr(settings, "APPMAIL_LOG_RETENTION_PERIOD", 180)
