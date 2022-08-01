@@ -13,21 +13,21 @@ from appmail.settings import LOG_RETENTION_PERIOD
 
 class Command(BaseCommand):
 
-    help = _lazy(
-        "Truncate all log records that have passed the LOG_RETENTION_PERIOD."
-    )
+    help = _lazy("Truncate all log records that have passed the LOG_RETENTION_PERIOD.")
 
     def add_arguments(self, parser: CommandParser) -> None:
         super().add_arguments(parser)
         parser.add_argument(
-            "-r", "--retention",
+            "-r",
+            "--retention",
             dest="retention",
             type=int,
             default=LOG_RETENTION_PERIOD,
             help="The number of days to retain logged messages.",
         )
         parser.add_argument(
-            "-c", "--commit",
+            "-c",
+            "--commit",
             dest="commit",
             action="store_true",
             default=False,
@@ -42,7 +42,7 @@ class Command(BaseCommand):
         """Return the date before which to truncate logs."""
         return date.today() - timedelta(days=retention)
 
-    def handle(self, *args: Any, **options: Any) -> str | None:
+    def handle(self, *args: Any, **options: Any) -> None:
         retention = options["retention"]
         commit = options["commit"]
         cutoff = self.cutoff(retention)
@@ -54,3 +54,4 @@ class Command(BaseCommand):
             return
         count, _ = logs.delete()
         self.stdout.write(f"Deleted {count} records.")
+        return
