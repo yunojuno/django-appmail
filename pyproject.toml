@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-appmail"
-version = "2.1"
+version = "2.2"
 description = "Django app for managing localised email templates."
 authors = ["YunoJuno <code@yunojuno.com>"]
 license = "MIT"
@@ -28,7 +28,7 @@ django = "^3.0 || ^4.0"
 [tool.poetry.dev-dependencies]
 black = {version = "*", allow-prereleases = true}
 coverage = "*"
-flake8 = "*"
+flake8 = "^3.9"
 flake8-bandit = "*"
 flake8-blind-except = "*"
 flake8-docstrings = "*"
