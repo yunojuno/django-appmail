@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## v2.3
+
+* Add Django 4.1 to build matrix
+
+## v2.2
+
+* Add management command to truncate logs after a period
+
 ## v2.1
 
 * Add Python 3.10 to build matrix
