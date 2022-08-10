@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-appmail"
-version = "2.2"
+version = "2.3"
 description = "Django app for managing localised email templates."
 authors = ["YunoJuno <code@yunojuno.com>"]
 license = "MIT"
@@ -13,6 +13,7 @@ classifiers = [
     "Framework :: Django :: 3.1",
     "Framework :: Django :: 3.2",
     "Framework :: Django :: 4.0",
+    "Framework :: Django :: 4.1",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.8",
