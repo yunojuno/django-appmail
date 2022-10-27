@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v3.0 (pre-release)
+
+* Add support for Python 3.11
+* Drop support for Django 3.0, 3.1
+
 ## v2.3
 
 * Add Django 4.1 to build matrix

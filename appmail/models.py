@@ -16,7 +16,6 @@ from django.utils.translation import gettext as _
 from django.utils.translation import gettext_lazy as _lazy
 
 from . import helpers
-from .compat import JSONField
 from .settings import (
     ADD_EXTRA_HEADERS,
     CONTEXT_PROCESSORS,
@@ -118,7 +117,7 @@ class EmailTemplate(models.Model):
         _lazy("HTML template"),
         help_text=_lazy("HTML content (may contain template variables)."),
     )
-    test_context = JSONField(
+    test_context = models.JSONField(
         default=dict,
         blank=True,
         help_text=_lazy(
@@ -416,7 +415,7 @@ class LoggedMessage(models.Model):
         "Plain text", blank=True, help_text=_lazy("Plain text content.")
     )
     html = models.TextField("HTML", blank=True, help_text=_lazy("HTML content."))
-    context = JSONField(
+    context = models.JSONField(
         default=dict,
         encoder=DjangoJSONEncoder,
         help_text=_lazy("Appmail template context."),

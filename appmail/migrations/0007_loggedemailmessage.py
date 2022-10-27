@@ -6,8 +6,6 @@ import django.utils.timezone
 from django.conf import settings
 from django.db import migrations, models
 
-from ..compat import JSONField
-
 
 class Migration(migrations.Migration):
 
@@ -64,7 +62,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "context",
-                    JSONField(
+                    models.JSONField(
                         default=dict,
                         encoder=django.core.serializers.json.DjangoJSONEncoder,
                         help_text="Appmail template context.",
