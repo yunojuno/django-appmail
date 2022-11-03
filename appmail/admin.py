@@ -4,6 +4,7 @@ import json
 
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
+from django.db.models import JSONField
 from django.db.models.query import QuerySet
 from django.http import HttpRequest, HttpResponseRedirect
 from django.template.defaultfilters import truncatechars
@@ -12,7 +13,6 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _lazy
 
-from .compat import JSONField
 from .forms import JSONWidget
 from .models import EmailTemplate, LoggedMessage
 

@@ -4,26 +4,12 @@ from django.core.exceptions import ImproperlyConfigured
 
 DEBUG = True
 
-try:
-    from django.db.models import JSONField  # noqa: F401
-
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": "test.db",
-        }
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": "test.db",
     }
-except ImportError:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": os.getenv("TEST_DB_NAME", "appmail"),
-            "USER": os.getenv("TEST_DB_USER", "postgres"),
-            "PASSWORD": os.getenv("TEST_DB_PASSWORD", "postgres"),
-            "HOST": os.getenv("TEST_DB_HOST", "localhost"),
-            "PORT": os.getenv("TEST_DB_PORT", "5432"),
-        }
-    }
+}
 
 INSTALLED_APPS = (
     "django.contrib.admin",
@@ -86,5 +72,7 @@ STATIC_URL = "/static/"
 
 if not DEBUG:
     raise ImproperlyConfigured("This project is only intended to be used for testing.")
+
+# ===
 
 APPMAIL_DEFAULT_SENDER = "test@example.com"
