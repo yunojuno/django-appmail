@@ -427,8 +427,9 @@ class LoggedMessage(models.Model):
         verbose_name = "Email message"
         verbose_name_plural = "Email messages sent"
         indexes = (
-            # Covering index for admin search.
-            models.Index(fields=['to', 'subject']),
+            # Indexes to help the admin search.
+            models.Index(fields=['to']),
+            models.Index(fields=['subject']),
         )
 
     def __repr__(self) -> str:
