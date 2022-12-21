@@ -265,7 +265,7 @@ class LoggedMessageAdmin(AdminBase):
 
     ordering = ("-timestamp",)
 
-    # If you update this, ensure the covering index is adjusted
+    # If you update this, ensure the indexes are adjusted
     # on the model and performance is taken into account.
     search_fields = ("to", "subject")
 
