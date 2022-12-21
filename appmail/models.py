@@ -270,7 +270,7 @@ class AppmailMessage(EmailMultiAlternatives):
     """
     Subclass EmailMultiAlternatives to be template-aware.
 
-    This class behaves like a standard Django EmailMultiAlternaives
+    This class behaves like a standard Django EmailMultiAlternatives
     email, but with the subject, body and 'text/html' alternative set
     from the template + context.
 
@@ -404,7 +404,6 @@ class LoggedMessage(models.Model):
         on_delete=models.SET_NULL,
         blank=True,
         null=True,
-        db_index=True,
         help_text=_lazy("The appmail template used."),
     )
     timestamp = models.DateTimeField(
@@ -427,6 +426,10 @@ class LoggedMessage(models.Model):
         get_latest_by = "timestamp"
         verbose_name = "Email message"
         verbose_name_plural = "Email messages sent"
+        indexes = (
+            # Covering index for admin search.
+            models.Index(fields=['to', 'subject']),
+        )
 
     def __repr__(self) -> str:
         return (

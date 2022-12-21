@@ -246,6 +246,8 @@ class LoggedMessageAdmin(AdminBase):
 
     list_display = ("to", "template_name", "_subject", "timestamp")
 
+    list_select_related = ("template",)
+
     list_filter = ("timestamp", "template__name", "template__language")
 
     raw_id_fields = ("user", "template")
@@ -261,6 +263,10 @@ class LoggedMessageAdmin(AdminBase):
         "timestamp",
     )
 
+    ordering = ("-timestamp",)
+
+    # If you update this, ensure the covering index is adjusted
+    # on the model and performance is taken into account.
     search_fields = ("to", "subject")
 
     def _subject(self, obj: LoggedMessage) -> str:
@@ -268,7 +274,7 @@ class LoggedMessageAdmin(AdminBase):
         return truncatechars(obj.subject, 50)
 
     def template_name(self, obj: LoggedMessage) -> str:
-        return obj.template.name
+        return obj.template.name if obj.template else ""
 
     def template_context(self, obj: LoggedMessage) -> str:
         """Pretty print version of the template context dict."""
