@@ -22,10 +22,10 @@ logger = logging.getLogger(__name__)
 class JSONWidget(forms.Textarea):
     """Pretty print JSON in a text area."""
 
-    DEFAULT_ATTRS = {
+    DEFAULT_ATTRS: dict[str, Union[str, int]] = {
         "class": "vLargeTextField",
         "rows": 15,
-    }  # type: dict[str, Union[str, int]]
+    }
 
     def format_value(self, value: str) -> str:
         """Pretty format JSON text."""
