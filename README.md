@@ -1,5 +1,7 @@
 # Django-AppMail
 
+[![PyPI](https://img.shields.io/pypi/v/django-appmail.svg)](https://pypi.org/project/django-appmail/)
+
 Django app for managing transactional email templates.
 
 ## Compatibility
