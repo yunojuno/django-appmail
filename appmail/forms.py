@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Dict, Union
+from typing import TYPE_CHECKING
 
 from django import forms
 from django.contrib import messages
@@ -12,16 +12,20 @@ from django.utils.translation import gettext_lazy as _lazy
 
 from .models import AppmailMessage, EmailTemplate, EmailTemplateQuerySet
 
+if TYPE_CHECKING:
+    from typing import Union
+
+
 logger = logging.getLogger(__name__)
 
 
 class JSONWidget(forms.Textarea):
     """Pretty print JSON in a text area."""
 
-    DEFAULT_ATTRS = {
+    DEFAULT_ATTRS: dict[str, Union[str, int]] = {
         "class": "vLargeTextField",
         "rows": 15,
-    }  # type: Dict[str, Union[str, int]]
+    }
 
     def format_value(self, value: str) -> str:
         """Pretty format JSON text."""

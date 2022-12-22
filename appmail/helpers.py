@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Callable, Dict, Iterable
+from typing import Callable, Iterable
 
 from django.http import HttpRequest
 
@@ -57,7 +57,7 @@ def expand_list(_list: list[str]) -> dict:
     """
     if not isinstance(_list, list):
         raise ValueError("arg must be a list")
-    tree = {}  # type: Dict[str, dict]
+    tree = {}  # type: dict[str, dict]
     for item in _list:
         t = tree
         for part in item.split("."):
