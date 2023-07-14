@@ -12,7 +12,6 @@ from appmail.settings import LOG_RETENTION_PERIOD
 
 
 class Command(BaseCommand):
-
     help = _lazy("Truncate all log records that have passed the LOG_RETENTION_PERIOD.")
 
     def add_arguments(self, parser: CommandParser) -> None:

@@ -86,7 +86,6 @@ class AdminBase(admin.ModelAdmin):
 
 @admin.register(EmailTemplate)
 class EmailTemplateAdmin(AdminBase):
-
     formfield_overrides = {JSONField: {"widget": JSONWidget}}
 
     list_display = (
@@ -254,7 +253,7 @@ class TemplateNameListFilter(admin.SimpleListFilter):
 
     def lookups(
         self, request: HttpRequest, model_admin: admin.ModelAdmin
-    ) -> tuple[tuple[str, str], tuple[str, str]]:
+    ) -> tuple[tuple[str, str], ...]:
         templates = (
             EmailTemplate.objects.values_list("name", flat=True)
             .distinct()
@@ -292,7 +291,7 @@ class TemplateLanguageListFilter(admin.SimpleListFilter):
 
     def lookups(
         self, request: HttpRequest, model_admin: admin.ModelAdmin
-    ) -> tuple[tuple[str, str], tuple[str, str]]:
+    ) -> tuple[tuple[str, str], ...]:
         templates = (
             EmailTemplate.objects.values_list("language", flat=True)
             .distinct()
@@ -316,7 +315,6 @@ class TemplateLanguageListFilter(admin.SimpleListFilter):
 
 @admin.register(LoggedMessage)
 class LoggedMessageAdmin(AdminBase):
-
     exclude = ("html", "context")
 
     formfield_overrides = {JSONField: {"widget": JSONWidget}}

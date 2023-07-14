@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [("appmail", "0005_emailtemplate_from_email__reply_to")]
 
     operations = [
