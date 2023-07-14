@@ -86,7 +86,6 @@ class AdminBase(admin.ModelAdmin):
 
 @admin.register(EmailTemplate)
 class EmailTemplateAdmin(AdminBase):
-
     formfield_overrides = {JSONField: {"widget": JSONWidget}}
 
     list_display = (
@@ -239,7 +238,6 @@ class EmailTemplateAdmin(AdminBase):
 
 @admin.register(LoggedMessage)
 class LoggedMessageAdmin(AdminBase):
-
     exclude = ("html", "context")
 
     formfield_overrides = {JSONField: {"widget": JSONWidget}}
