@@ -236,6 +236,83 @@ class EmailTemplateAdmin(AdminBase):
     )
 
 
+class TemplateNameListFilter(admin.SimpleListFilter):
+    """
+    Provide a list of template names to filter by.
+
+    This is more efficient than providing `template__name` to list_filter
+    because that would ask the question "which templates are in use for
+    this set of logged messages" which requires a join and is thus slower
+    over a large result set. This instead asks the question "which templates
+    are even available" which is much faster.
+    """
+
+    title = _lazy("Template name")
+    parameter_name = "template_name"
+    template = "admin/appmail/loggedmessage/template_name_filter.html"
+
+    def lookups(
+        self, request: HttpRequest, model_admin: admin.ModelAdmin
+    ) -> tuple[tuple[str, str], ...]:
+        templates = (
+            EmailTemplate.objects.values_list("name", flat=True)
+            .distinct()
+            .order_by("name")
+        )
+        return tuple((name, name) for name in templates)
+
+    def queryset(self, request: HttpRequest, queryset: QuerySet) -> QuerySet:
+        """
+        Return the filtered queryset.
+
+        Filter based on the value provided in the query string and
+        retrievable via `self.value()`.
+
+        """
+        if value := self.value():
+            return queryset.filter(template__name__exact=value)
+
+        return queryset
+
+
+class TemplateLanguageListFilter(admin.SimpleListFilter):
+    """
+    Provide a list of template languages to filter by.
+
+    This is more efficient than providing `template__language` to list_filter
+    because that would ask the question "which template languages are in use
+    for this set of logged messages" which requires a join and is thus slower
+    over a large result set. This instead asks the question "which templates
+    languages are even available" which is much faster.
+    """
+
+    title = _lazy("Template language")
+    parameter_name = "template_language"
+
+    def lookups(
+        self, request: HttpRequest, model_admin: admin.ModelAdmin
+    ) -> tuple[tuple[str, str], ...]:
+        templates = (
+            EmailTemplate.objects.values_list("language", flat=True)
+            .distinct()
+            .order_by("language")
+        )
+        return tuple((lang, lang) for lang in templates)
+
+    def queryset(self, request: HttpRequest, queryset: QuerySet) -> QuerySet:
+        """
+        Return the filtered queryset.
+
+        Filter based on the value provided in the query string and
+        retrievable via `self.value()`.
+
+        """
+        if value := self.value():
+            return queryset.filter(template__language__exact=value)
+
+        return queryset
+
+
 @admin.register(LoggedMessage)
 class LoggedMessageAdmin(AdminBase):
     exclude = ("html", "context")
@@ -246,7 +323,7 @@ class LoggedMessageAdmin(AdminBase):
 
     list_select_related = ("template",)
 
-    list_filter = ("timestamp", "template__name", "template__language")
+    list_filter = ("timestamp", TemplateNameListFilter, TemplateLanguageListFilter)
 
     raw_id_fields = ("user", "template")
 

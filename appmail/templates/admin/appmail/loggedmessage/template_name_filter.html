@@ -1,0 +1,32 @@
+{% load i18n %}
+
+{% comment %}
+Overrides (v4.2.3) django/contrib/admin/templates/admin/filter.html
+
+1) Add styles to shrink font size & curtail length of template names.
+2) Updates the HTML to add the styling class and the full template
+   name as the title, which will appear in tooltips on hover.
+
+{% endcomment %}
+
+<style>
+  .template-name-link {
+    font-size: 10px;
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+</style>
+<details data-filter-title="{{ title }}" open>
+  <summary>
+    {% blocktranslate with filter_title=title %} By {{ filter_title }} {% endblocktranslate %}
+  </summary>
+  <ul>
+  {% for choice in choices %}
+    <li{% if choice.selected %} class="selected"{% endif %}>
+        <a class="template-name-link" href="{{ choice.query_string|iriencode }}" title="{{ choice.display }}">{{ choice.display }}</a>
+    </li>
+  {% endfor %}
+  </ul>
+</details>
