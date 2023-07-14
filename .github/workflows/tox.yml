@@ -13,8 +13,9 @@ jobs:
     name: Check formatting
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        toxenv: [fmt,lint,mypy]
+        toxenv: [fmt, lint, mypy]
     env:
       TOXENV: ${{ matrix.toxenv }}
 
@@ -36,9 +37,13 @@ jobs:
     name: Run tests
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python: ["3.8", "3.10", "3.11"]
-        django: ["32", "41", "main"]
+        python: ["3.9", "3.10", "3.11"]
+        django: ["40", "41", "42", "main"]
+        exclude:
+          - python: "3.9"
+            django: "main"
 
     env:
       TOXENV: py${{ matrix.python }}-django${{ matrix.django }}
