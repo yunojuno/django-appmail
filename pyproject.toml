@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-appmail"
-version = "4.0"
+version = "5.0.0"
 description = "Django app for managing localised email templates."
 authors = ["YunoJuno <code@yunojuno.com>"]
 license = "MIT"
