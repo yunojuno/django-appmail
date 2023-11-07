@@ -49,7 +49,6 @@ class HelperTests(TestCase):
         self.assertEqual(helpers.merge_dicts({"foo": 1}, {"foo": 2}), {"foo": 2})
 
     def test_patch_context(self):
-
         foo = {"foo": 1}
         bar = {"bar": 2}
         baz = {"baz": 3}

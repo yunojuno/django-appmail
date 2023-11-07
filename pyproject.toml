@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-appmail"
-version = "5.0.0"
+version = "6.0"
 description = "Django app for managing localised email templates."
 authors = ["YunoJuno <code@yunojuno.com>"]
 license = "MIT"
@@ -12,35 +12,31 @@ classifiers = [
     "Framework :: Django :: 3.2",
     "Framework :: Django :: 4.0",
     "Framework :: Django :: 4.1",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.0",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
 packages = [{ include = "appmail" }]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-django = "^3.2 || ^4.0"
+python = "^3.9"
+django = "^3.2 || ^4.0 || ^5.0"
 
 [tool.poetry.dev-dependencies]
 black = "*"
 coverage = "*"
-flake8 = "*"
-flake8-bandit = "*"
-flake8-blind-except = "*"
-flake8-docstrings = "*"
-flake8-logging-format = "*"
-flake8-print = "*"
 freezegun = "*"
-isort = "*"
 mypy = "*"
 pre-commit = "*"
 pytest = "*"
 pytest-cov = "*"
 pytest-django = "*"
+ruff = "*"
 tox = "*"
 
 [build-system]
