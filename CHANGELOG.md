@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v6.0.0
+
+* Add support for Django 5.0
+* Add Python 3.12 to classifiers and build matrix
+
 ## v5.0.0
 
 * Improve LoggedMessage admin list page performance.
