@@ -9,8 +9,6 @@ homepage = "https://github.com/yunojuno/django-appmail"
 repository = "https://github.com/yunojuno/django-appmail"
 classifiers = [
     "Environment :: Web Environment",
-    "Framework :: Django :: 4.0",
-    "Framework :: Django :: 4.1",
     "Framework :: Django :: 4.2",
     "Framework :: Django :: 5.0",
     "Framework :: Django :: 5.2",
@@ -25,7 +23,7 @@ packages = [{ include = "appmail" }]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-django = "^4.0 || ^5.0"
+django = "^4.2 || ^5.0"
 
 [tool.poetry.dev-dependencies]
 black = "*"

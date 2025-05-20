@@ -62,7 +62,7 @@ jobs:
       matrix:
         python: ["3.9", "3.10", "3.11", "3.12"]
         # build LTS versions and main
-        django: ["40", "41", "42", "50", "52", "main"]
+        django: ["42", "50", "52", "main"]
         exclude:
           - python: "3.9"
             django: "50"
