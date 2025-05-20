@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## v7.0.0
+
+* Add support for Django 5.2
+* Drop support for Django 3.x (including Django 3.2 LTS)
+
 ## v6.0.0
 
 * Add support for Django 5.0

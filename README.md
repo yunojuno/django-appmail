@@ -6,8 +6,7 @@ Django app for managing transactional email templates.
 
 ## Compatibility
 
-This project now requires Django 4.0+ and Python 3.9+. If you require a previous
-version you will have to refer to the relevant branch or tag.
+This project requires Django 4.0+ and Python 3.9+. Django 3.x support was dropped in version 7.0. If you require compatibility with older versions of Django, please use version 6.0 or earlier.
 
 ## Background
 

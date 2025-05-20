@@ -4,6 +4,8 @@ from django.core.exceptions import ImproperlyConfigured
 
 DEBUG = True
 
+USE_TZ = False
+
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
@@ -56,9 +58,16 @@ TEMPLATES = [
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
-# NB - this is good for local testing only
-DEFAULT_FILE_STORAGE = "django.core.files.storage.FileSystemStorage"
-STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+# Update storage settings to use the new STORAGES format
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "static"))
 
@@ -67,8 +76,6 @@ SECRET_KEY = "top secret"  # noqa: S105
 ROOT_URLCONF = "tests.urls"
 
 APPEND_SLASH = True
-
-STATIC_URL = "/static/"
 
 if not DEBUG:
     raise ImproperlyConfigured("This project is only intended to be used for testing.")
