@@ -1,4 +1,5 @@
 """Views supporting template previews in admin site."""
+
 from __future__ import annotations
 
 import json
