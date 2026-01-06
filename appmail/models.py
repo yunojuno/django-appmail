@@ -155,7 +155,7 @@ class EmailTemplate(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["name", "language", "version"],
-                name="unique_template_name_language_version",
+                name="unique_email_template_name_language_version",
             )
         ]
 
