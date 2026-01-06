@@ -6,3 +6,10 @@ dist
 poetry.lock
 static
 test.db
+/.idea/codeStyles/codeStyleConfig.xml
+/.idea/codeStyles/Project.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/django-appmail.iml
+/.idea/vcs.xml
+/.idea/workspace.xml
