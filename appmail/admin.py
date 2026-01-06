@@ -71,8 +71,10 @@ class AdminBase(admin.ModelAdmin):
     def iframe(self, url: str) -> str:
         """Return an iframe containing the url for display in change view."""
         return format_html(
-            f"<iframe class='appmail' src='{url}' onload='resizeIframe(this)'></iframe>"
-            f"<br/><a href='{url}' target='_blank'>View in new tab.</a>"
+            "<iframe class='appmail' src='{}' onload='resizeIframe(this)'></iframe>"
+            "<br/><a href='{}' target='_blank'>View in new tab.</a>",
+            url,
+            url,
         )
 
     def pretty_print(self, data: dict | None) -> str:
