@@ -152,7 +152,12 @@ class EmailTemplate(models.Model):
     objects = EmailTemplateQuerySet().as_manager()
 
     class Meta:
-        unique_together = ("name", "language", "version")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["name", "language", "version"],
+                name="unique_email_template_name_language_version",
+            )
+        ]
 
     def __str__(self) -> str:
         return f"{self.name} (language={self.language}; version={self.version})"
@@ -218,7 +223,7 @@ class EmailTemplate(models.Model):
         try:
             self.render_subject({})
         except TemplateDoesNotExist as ex:
-            return {"subject": _lazy("Template does not exist: {}".format(ex))}
+            return {"subject": _lazy("Template does not exist: {}").format(ex)}
         except TemplateSyntaxError as ex:
             return {"subject": str(ex)}
         else:
@@ -232,7 +237,9 @@ class EmailTemplate(models.Model):
     ) -> str:
         """Render email body in plain text or HTML format."""
         if content_type not in EmailTemplate.CONTENT_TYPES:
-            raise ValueError(_(f"Invalid content type. Value supplied: {content_type}"))
+            raise ValueError(
+                _("Invalid content type. Value supplied: {}").format(content_type)
+            )
         if content_type == EmailTemplate.CONTENT_TYPE_PLAIN:
             ctx = Context(helpers.patch_context(context, processors), autoescape=False)
             return Template(self.body_text).render(ctx)
@@ -252,7 +259,7 @@ class EmailTemplate(models.Model):
         try:
             self.render_body({}, content_type=content_type)
         except TemplateDoesNotExist as ex:
-            return {field_name: _("Template does not exist: {}".format(ex))}
+            return {field_name: _("Template does not exist: {}").format(ex)}
         except (TemplateSyntaxError, NoReverseMatch) as ex:
             return {field_name: str(ex)}
         else:

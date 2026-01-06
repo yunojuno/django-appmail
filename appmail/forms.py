@@ -145,16 +145,14 @@ class EmailTestForm(forms.Form):
                 logger.exception("Error sending test email")
                 messages.error(
                     request,
-                    _lazy(
-                        "Error sending test email '{}': {}".format(template.name, ex)
+                    _lazy("Error sending test email '{}': {}").format(
+                        template.name, ex
                     ),
                 )
             else:
                 messages.success(
                     request,
-                    _lazy(
-                        "'{}' email sent to '{}'".format(
-                            template.name, ", ".join(email.to)
-                        )
+                    _lazy("'{}' email sent to '{}'").format(
+                        template.name, ", ".join(email.to)
                     ),
                 )

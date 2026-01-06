@@ -107,7 +107,7 @@ def resend_email(request: HttpRequest, email_id: int) -> HttpResponseRedirect:
     """Resend a specific LoggedMessage."""
     email = LoggedMessage.objects.get(id=email_id)
     email.resend()
-    messages.success(request, _("Resent email to {}".format(email.to)))
+    messages.success(request, _("Resent email to {}").format(email.to))
     return HttpResponseRedirect(reverse("admin:appmail_loggedmessage_changelist"))
 
 
